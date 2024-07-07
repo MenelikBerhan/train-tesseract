@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Convert MS Excel(xlsx) files to plain text files
+"""
 import os
 from glob import iglob
 
