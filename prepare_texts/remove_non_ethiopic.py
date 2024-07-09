@@ -6,57 +6,85 @@ import os
 import re
 from glob import iglob
 
+from utils import remove_non_ethiopic
 
-pathname = os.path.join('../training_texts/', '**', '*.txt')
 
-allowed_non_eth_chars ={
-    '/','\\', '~', '|', '!', '?', '$', '*', '^',
-    ' ','\n', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    '-', '+', '=', '<', '>',
-    '.', ',', ':', ';', '#',  '%', '_',
-    '"', "'", '‘', '’', '“', '”', '«', '»', 
-    '(', ')', '[', ']', '{', '}'}
+# TODO: to inclue chars like <> (occurs multiple times in source)
+# TODO: Check for space after punctuation
+# TODO: Check if line is all punc
+# TODO: Continous . in table of contents
 
-def remove_non_ethiopic(match):
-    char = match.group()
-    if not (char in allowed_non_eth_chars or
-            (ord(char) not in range(0x135d, 0x1360) and     # combining marks(not needed)
-            0x1200 <= ord(char) <= 0x137F)):     # ethiopic unicode
-        return ''
-    return char
+input_root_dir = '../training_texts/'
+output_root_dir = './cleaned_texts'
+overwrite_output_file = True
 
-for file_path in iglob(pathname, recursive=True):
-    input_dir, output_file_name = os.path.split(file_path)
+# if input root dir doesn't exist raise exception
+if not os.path.isdir(input_root_dir):
+    raise FileNotFoundError(
+        f"Input Root Dir '{input_root_dir}' Does Not Exist!"
+    )
 
-    # create sub directories in './cleaned_texts'
-    output_sub_dir = input_dir[len('../training_texts/'):]
-    output_dir = os.path.join('./cleaned_texts', output_sub_dir)
+
+def get_output_file_path(input_file_path: str):
+    """
+    For given input file path, creates sub dirs in output root
+    directory as needed abd return output file path.
+
+    Raises FileExists Error if a file already exists at output file path.
+    """
+    input_file_dir, input_file_name = os.path.split(input_file_path)
+    # get sub directroy path by removing input root dir from input file dir
+    output_sub_dir = input_file_dir[len(input_root_dir):]
+
+    # remove leading '/' from output_sub_dir so that when joining
+    # with output root dir, path.join don't ignore ouput root dir
+    output_sub_dir.strip('/')
+    output_dir = os.path.join(output_root_dir, output_sub_dir)
+
+    # create output directory if it doesn't exist
     if not os.path.isdir(output_dir):
-        os.makedirs(output_dir)
+        os.makedirs(output_dir)     # creates parents as needed
 
-    output_file_path = os.path.join(output_dir, output_file_name)
+    # set output file path using same input file names
+    output_file_path = os.path.join(output_dir, input_file_name)
 
-    with open(output_file_path, 'w') as output_file:
-        with open(file_path) as input_file:
-            # read file content as list of lines
+    # if output file already exists raise exception
+    if not overwrite_output_file and os.path.isfile(output_file_path):
+        raise FileExistsError(
+            f"Output File '{output_file_path}' already Exists!"
+        )
+
+    return output_file_path
+
+
+# pattern to match all txt files in input_root_dir & sub directories
+pathname = os.path.join(input_root_dir, '**', '*.txt')
+
+# loop over each input file path
+for input_file_path in iglob(pathname, recursive=True):
+    # get output file path
+    output_file_path = get_output_file_path(input_file_path)
+
+    with open(input_file_path) as input_file:
+        with open(output_file_path, 'w') as output_file:
+            # read file content & loop over lines
             for line in input_file.readlines():
                 # skip if line is space or empty
-                if line.isspace() or not line:
+                if line.isspace() or line == '':
                     continue
-                # split line by space b/n words
-                line_wrds = line.split()
 
-                # check each letter in each word
-                cleaned_line_wrds = [
-                    re.sub('.', remove_non_ethiopic, wrd)
-                    for wrd in line_wrds
-                ]
+                # remove chars that are not allowed
+                cleaned_line = re.sub(r'.', remove_non_ethiopic, line)
 
-                # join non empty strings into one line
-                final_line = " ".join(
-                    [wrd for wrd in cleaned_line_wrds if wrd])
+                # split line by space b/n words (to fix spacing)
+                cleaned_line_wrds = cleaned_line.split()
 
-                # skip if resulting line is space or empty 
-                if final_line.isspace() or not final_line: continue
+                # join words into one line
+                final_line = " ".join(cleaned_line_wrds)
 
+                # skip if resulting line is space or empty
+                if final_line.isspace() or final_line == '':
+                    continue
+
+                # append newline at the end & write line to output file
                 output_file.write(final_line + '\n')
