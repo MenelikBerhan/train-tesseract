@@ -28,6 +28,8 @@ def remove_non_ethiopic(match: re.Match):
     """
     Checks if a matched single char is an allowed character.
     If allowed returns itself, else returns an empty string.
+
+    Raises: ValueError if more than one char is in match group.
     """
     # get matched char and if its not single raise Exception
     char = match.group()
@@ -44,6 +46,16 @@ def remove_non_ethiopic(match: re.Match):
         return ''
     # else return char it self
     return char
+
+
+def is_allowed_non_ethiopic(line: str):
+    """
+    Returns True if line is empty or all chars in line are allowed
+    non Ethiopic chars. To be used before writing cleaned text to output.
+
+    Reason: No need for a line that does not contain any Ethiopic char.
+    """
+    return all([char in allowed_non_eth_chars for char in line])
 
 
 def convert_num(match: re.Match):
@@ -66,13 +78,13 @@ def change_num(wrd: str):
 
 
 """
-# Candidates of non-ethiopic chars to allow 
+# Candidates of non-ethiopic chars to allow
 {'/','\\', '~', '|', '!', '?',
  '$', '*', '^', ' ','\n',
  '-', '+', '=', '<', '>', '≤', '≥',
  '.', ',', ':', ';', '#',  '%', '_',
- '"', "'", '‘', '’', '“', '”', '«', '»', 
- '(', ')', '[', ']', '{', '}'} 
+ '"', "'", '‘', '’', '“', '”', '«', '»',
+ '(', ')', '[', ']', '{', '}'}
 
 # Unicode values for Ethiopic
 Ethiopic Range: 1200–137F
@@ -96,7 +108,7 @@ U+0060 Grave Accent '`'
 U+2190-93 Arrows '←', '↑', '→', '↓',
 &, '≤', '≥', """
 
-""" 
+"""
 # Punctuation
 1360 ፠ ETHIOPIC SECTION MARK
 1361 ፡ ETHIOPIC WORDSPACE

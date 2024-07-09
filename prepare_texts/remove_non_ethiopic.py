@@ -6,12 +6,11 @@ import os
 import re
 from glob import iglob
 
-from utils import remove_non_ethiopic
+from utils import is_allowed_non_ethiopic, remove_non_ethiopic
 
 
-# TODO: to inclue chars like <> (occurs multiple times in source)
-# TODO: Check for space after punctuation
-# TODO: Check if line is all punc
+# TODO: to inclue chars like <> that occur multiple times in source
+# TODO: Check for space b/n punctuations and words
 # TODO: Continous . in table of contents
 
 input_root_dir = '../training_texts/'
@@ -28,9 +27,9 @@ if not os.path.isdir(input_root_dir):
 def get_output_file_path(input_file_path: str):
     """
     For given input file path, creates sub dirs in output root
-    directory as needed abd return output file path.
+    directory as needed and returns output file path.
 
-    Raises FileExists Error if a file already exists at output file path.
+    Raises: FileExists Error if a file already exists at output file path.
     """
     input_file_dir, input_file_name = os.path.split(input_file_path)
     # get sub directroy path by removing input root dir from input file dir
@@ -82,8 +81,8 @@ for input_file_path in iglob(pathname, recursive=True):
                 # join words into one line
                 final_line = " ".join(cleaned_line_wrds)
 
-                # skip if resulting line is space or empty
-                if final_line.isspace() or final_line == '':
+                # skip if final line is all allowed non Ethiopic or empty
+                if is_allowed_non_ethiopic(final_line):
                     continue
 
                 # append newline at the end & write line to output file
