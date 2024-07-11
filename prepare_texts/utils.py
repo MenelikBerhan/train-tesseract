@@ -4,15 +4,23 @@ Utilities for preparing & cleaning txt files
 """
 import re
 
+
 allowed_non_eth_chars = {
+    # minus, en & em dashes (rep: minus-hiphen(-))
+    '−', '–', '—',
+    # dots (rep: . [for '…'])
+    '…', '•',
+    # to maintain spacing (removed when splitting line)
     ' ', '\n', '\t',
-    '~', '|', '$', '*', '^', '#',  '%',
-    '/', '\\', '!', '?',
-    '-', '+', '=', '<', '>',
-    '.', ',', ':', ';',  '_',
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',    # arabic nums
-    '"', "'", '‘', '’', '“', '”', '«', '»',         # quotes
-    '(', ')', '[', ']', '{', '}'                    # parenthesis
+    # general uses (rep: as is)
+    '~', '|', '$', '*', '^', '#',  '%', '/', '\\', '!', '?',
+    '+', '=', '<', '>', '-', '_', '.', ',', ':', ';',
+    # arabic nums (rep: as is)
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    # quotes (rep: " and ')
+    '"', "'", '‘', '’', '“', '”', '«', '»', '‹', '›', '`',
+    # parentheses (rep: as is)
+    '(', ')', '[', ']', '{', '}'
 }
 
 eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
@@ -24,7 +32,7 @@ eth_nums = {0: '', 1: '፲', 2: '፳', 3: '፴', 4: '፵', 5: '፶',
             6: '፷', 7: '፸', 8: '፹', 9: '፺', 10: '፻', 1000: '፼'}
 
 
-def remove_non_ethiopic(match: re.Match):
+def remove_non_ethiopic_helper(match: re.Match):
     """
     Checks if a matched single char is an allowed character.
     If allowed returns itself, else returns an empty string.
@@ -48,7 +56,15 @@ def remove_non_ethiopic(match: re.Match):
     return char
 
 
-def is_allowed_non_ethiopic(line: str):
+def remove_non_ethiopic(line: str):
+    """
+    Removes non Ethiopic characters (except some allowed ones)
+    from line and return the cleaned line.
+    """
+    return re.sub(r'.', remove_non_ethiopic_helper, line)
+
+
+def is_all_allowed_non_ethiopic(line: str):
     """
     Returns True if line is empty or all chars in line are allowed
     non Ethiopic chars. To be used before writing cleaned text to output.
@@ -56,6 +72,45 @@ def is_allowed_non_ethiopic(line: str):
     Reason: No need for a line that does not contain any Ethiopic char.
     """
     return all([char in allowed_non_eth_chars for char in line])
+
+
+def remove_extra_dots(match: re.Match):
+    """
+    Removes repetitions of `.` and `…` from match,
+    and adds spacing at start and end when needed.
+    """
+    # get matched group
+    dots: str = match.group()
+    # start, dot & end of match group
+    start, dot, end = dots[0], dots[1], dots[-1]
+
+    # if there is a char (other than space) before or after dots, add space
+    r_start = '' if start in ['.', '…'] or start.isspace() else start + ' '
+    r_end = '' if end in ['.', '…'] or end.isspace() else ' ' + end
+
+    # use three `.` or one `…`
+    r_dot = dot * 3 if dot == '.' else dot
+    return r_start + r_dot + r_end
+
+
+def clean_line(line: str):
+    """
+    Cleans line by:
+        - removing epetitions of `.` (if > 3) and `…` (if > 1)
+        - adding or removing space b/n words & punctuations as needed.
+
+    Returns: list of words in the cleaned line.
+    """
+    # matches repetiton of dots with optional one char at start & end
+    pattern = r'(.?(\.{4,}|…{2,}).?)'
+    # replace dots
+    line = re.sub(pattern, remove_extra_dots, line)
+
+    # split line by space b/n words (to fix spacing)
+    cleaned_line_wrds = line.split()
+
+    # TODO: add space after punctuations in long words(len()>15)
+    return cleaned_line_wrds
 
 
 def convert_num(match: re.Match):
@@ -79,12 +134,8 @@ def change_num(wrd: str):
 
 """
 # Candidates of non-ethiopic chars to allow
-{'/','\\', '~', '|', '!', '?',
- '$', '*', '^', ' ','\n',
- '-', '+', '=', '<', '>', '≤', '≥',
- '.', ',', ':', ';', '#',  '%', '_',
- '"', "'", '‘', '’', '“', '”', '«', '»',
- '(', ')', '[', ']', '{', '}'}
+
+'&', '@',
 
 # Unicode values for Ethiopic
 Ethiopic Range: 1200–137F
@@ -93,20 +144,32 @@ Ethiopic Extended Range: 2D80–2DDF
 Ethiopic Extended-A Range: AB00–AB2F
 Ethiopic Extended-B Range: 1E7E0–1E7FF
 
-# punctuations & symbols (Not sure to include or Not)
+##  punctuations & symbols
 U+2014 EM DASH —
 U+2013 En Dash –
 U+2039/a Single Angle Quotation Marks '‹' & '›'
 U+00ab/bb  Double Angle Quotation Marks '«' & '»'
 U+2018/9 left & right Single Quotation Mark '‘' & '’'
-U+2018/9 left & right Double  Quotation Mark '“' & '”'
+U+2018/9 left & right Double Quotation Mark '“' & '”'
 U+2022 Bullet '•'
 U+00B7 Middle Dot ·
 U+00D7 Multiplication Sign '×'
 U+2212 Minus Sign '−'
 U+0060 Grave Accent '`'
 U+2190-93 Arrows '←', '↑', '→', '↓',
-&, '≤', '≥', """
+
+―               HORIZONTAL BAR
+₊               SUBSCRIPT PLUS SIGN
+⁻               SUPERSCRIPT MINUS
+–               EN DASH
+−               MINUS SIGN
+⁺               SUPERSCRIPT PLUS SIGN
+‐               HYPHEN
+—               EM DASH
+‑               NON-BREAKING HYPHEN
+₋               SUBSCRIPT MINUS
+‒               FIGURE DASH
+"""
 
 """
 # Punctuation

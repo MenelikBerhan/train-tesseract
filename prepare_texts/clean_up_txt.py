@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-Removes non Ethiopic Script characters from txt files
+Cleans txt files by removing undesired non Ethiopic characters,
+fixing spacing b/n words and unwanted character repetitions. 
 """
 import os
 import re
 from glob import iglob
 
-from utils import is_allowed_non_ethiopic, remove_non_ethiopic
+from utils import clean_line, is_all_allowed_non_ethiopic, remove_non_ethiopic
 
 
-# TODO: to inclue chars like <> that occur multiple times in source
 # TODO: Check for space b/n punctuations and words
 # TODO: Continous . in table of contents
+# TODO: Replace some variations of punctuations with z most common one (.-)
+#       :... Check Ethiopic Unicharset File
 
 input_root_dir = '../training_texts/'
 output_root_dir = './cleaned_texts'
@@ -72,17 +74,17 @@ for input_file_path in iglob(pathname, recursive=True):
                 if line.isspace() or line == '':
                     continue
 
-                # remove chars that are not allowed
-                cleaned_line = re.sub(r'.', remove_non_ethiopic, line)
+                # remove chars that are non Ethiopic & not allowed
+                allowed_line = remove_non_ethiopic(line)
 
-                # split line by space b/n words (to fix spacing)
-                cleaned_line_wrds = cleaned_line.split()
+                # remove repetetive dots & fix spacing b/n words
+                cleaned_line_wrds = clean_line(allowed_line)
 
                 # join words into one line
                 final_line = " ".join(cleaned_line_wrds)
 
                 # skip if final line is all allowed non Ethiopic or empty
-                if is_allowed_non_ethiopic(final_line):
+                if is_all_allowed_non_ethiopic(final_line):
                     continue
 
                 # append newline at the end & write line to output file
