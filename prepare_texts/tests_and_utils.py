@@ -12,21 +12,28 @@ from glob import iglob
 from utils import remove_non_ethiopic
 
 allowed_non_eth_chars = {
+    # minus, en & em dashes (rep: minus-hiphen(-))
+    '−', '–', '—',
+    # dots (rep: . [for '…'])
+    '…', '•',
+    # to maintain spacing (removed when splitting line)
     ' ', '\n', '\t',
-    '~', '|', '$', '*', '^', '#',  '%',
-    '/', '\\', '!', '?',
-    '-', '+', '=', '<', '>', '…',
-    '.', ',', ':', ';',  '_',
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',    # arabic nums
-    '"', "'", '‘', '’', '“', '”', '«', '»',         # quotes
-    '(', ')', '[', ']', '{', '}'                    # parenthesis
+    # general uses (rep: as is)
+    '~', '|', '$', '*', '^', '#',  '%', '/', '\\', '!', '?',
+    '+', '=', '<', '>', '-', '_', '.', ',', ':', ';',
+    # arabic nums (rep: as is)
+    # '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    # quotes (rep: " and ')
+    '"', "'", '‘', '’', '“', '”', '«', '»', '‹', '›', '`',
+    # parentheses (rep: as is)
+    '(', ')', '[', ']', '{', '}'
 }
+eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
 
-
-
+out_path = './test-punc-punc.txt'
 c = 0
-pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
-prob_files = {}
+pathname = os.path.join('../training_texts/', '**', '*.txt')
+prob_files: 'dict[str, list[tuple]]' = {}
 for file_path in iglob(pathname, recursive=True):
     with open(file_path) as in_file:
         l = 0
@@ -34,17 +41,24 @@ for file_path in iglob(pathname, recursive=True):
             l += 1
             if line.isspace() or line == '':
                 continue
-            wrds = line.split()
-            if any([len(w) > 15 for w in wrds]):
+            # wrds = line.split()
+            if re.search(r'[፣፦፥፧፡፤፠።፨]{1}[-]{1}', line) != None:
                 if file_path in prob_files:
-                    prob_files[file_path] = prob_files[file_path] + 1
+                    prob_files[file_path].append((l, line))
                 else:
-                    prob_files[file_path] = 1
+                    prob_files[file_path] = [(l, line)]
 
+
+print(len(prob_files))
 k = list(prob_files.keys())
-k.sort(key=lambda x: prob_files[x], reverse=True)
-for f in k:
-    print(f'{f}: {prob_files[f]}')
+k.sort(key=lambda x: len(prob_files[x]), reverse=True)
+with open(out_path, 'w') as file:
+    for f in k:
+        # print(f'{f}: {prob_files[f]}')
+        to_write = f'{f} ({len(prob_files[f])} Lines)\n'
+        for line_info in prob_files[f]:
+            to_write += f'{line_info[0]}: "{line_info[1].strip()}"\n'
+        file.write(to_write + '\n')
 
 
 """ d1 = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',

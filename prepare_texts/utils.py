@@ -3,7 +3,8 @@
 Utilities for preparing & cleaning txt files
 """
 import re
-
+# autopep8: off
+# fmt: off
 
 allowed_non_eth_chars = {
     # minus, en & em dashes (rep: minus-hiphen(-))
@@ -74,43 +75,101 @@ def is_all_allowed_non_ethiopic(line: str):
     return all([char in allowed_non_eth_chars for char in line])
 
 
-def remove_extra_dots(match: re.Match):
+def remove_repetitive_punctuations(match: re.Match):
     """
-    Removes repetitions of `.` and `…` from match,
+    Removes repetitions of `.`, `_` and `…` from match,
     and adds spacing at start and end when needed.
     """
-    # get matched group
-    dots: str = match.group()
-    # start, dot & end of match group
-    start, dot, end = dots[0], dots[1], dots[-1]
-    # if there is a char (other than space) before or after dots, add space
-    r_start = '' if start in ['.', '…'] else (
+    repeating_chars = ['.', '…', '_']
+    # get matched group of repetitive punctuations
+    puncs: str = match.group()
+    # start, puctuation (.|_|…) & end of match group
+    start, punc, end = puncs[0], puncs[1], puncs[-1]
+
+    # if there is a char (other than space) before or after puncs, add space
+    cleaned_start = '' if start in repeating_chars else (
         start + ' ' if not start.isspace() else start)
-    r_end = '' if end in ['.', '…'] else (
+    cleaned_end = '' if end in repeating_chars else (
         ' ' + end if not end.isspace() else end)
 
-    # use three `.` or one `…`
-    r_dot = dot * 3 if dot == '.' else dot
-    return r_start + r_dot + r_end
+    # use three `._` or one `…`
+    cleaned_punc = punc if punc == '…' else punc * 3
+    return cleaned_start + cleaned_punc + cleaned_end
+
+
+def add_space_after_char(match: re.Match):
+    """
+    Adds a space after Ethiopic punctuation characters,
+    between `]` & `[` and `)` & `()`.
+    """
+    before_space_chars = eth_puncs.union({']', ')'})
+    # get matched chars
+    chars = match.group()
+    if len(chars) != 2:
+        raise ValueError('Length of Match not Equal to Two!')
+    if chars[0] not in before_space_chars:
+        raise ValueError('Incorrect char at Start of Match!')
+
+    # add space & return
+    return chars[0] + ' ' + chars[1]
+
+def substitue_punctuations(match: re.Match):
+    """
+    Replaces incorrectly represented Ethiopic punctuations with proper one.
+    Example: replaces `፡፡` with `።`, `፡-` with `፦` & `፤-` with `፤ `.
+    """
+    punc_dict = {'፡፡': '።', '፡-': '፦', '፤-': '፤ '}
+    # get matched chars
+    chars = match.group()
+    if len(chars) != 2:
+        raise ValueError('Length of Match not Equal to Two!')
+    if chars not in punc_dict:
+        raise ValueError('Incorrect characters Matched!')
+    return punc_dict[chars]
 
 
 def clean_line(line: str):
     """
     Cleans line by:
-        - removing epetitions of `.` (if > 3) and `…` (if > 1)
+        - removing undesired characters at start & end of line,
+            which are mostly remnants of lists & tables in source text.
+        - substituting improper punctuations with correct one, 
+            for example replace `፡፡` with `።`, `፡-` with `፦`.
+        - removing repetitions of `.|_` (if > 3) and `…` (if > 1),
+            which exist mostly in table of contents of source text.
         - adding or removing space b/n words & punctuations as needed.
 
     Returns: list of words in the cleaned line.
     """
-    # matches repetiton of dots with optional one char at start & end
-    pattern = r'(.?(\.{4,}|…{2,}).?)'
-    # replace dots
-    line = re.sub(pattern, remove_extra_dots, line)
+    # strip undesired chars from start & end of line
+    # spaces added to strip chars if only space occurs b/n them
+    chars_to_strip = '+|, \t\n'
+    line = line.strip(chars_to_strip)
+
+    # TODO: parens with only space in between
+
+    # match `፡፡`, `፡-` & `፤-` and replace with `።`, `፦` & `፤ `
+    # NOTE: `፤-` is a peculiar case for DTW-All-Chapters.txt
+    double_wrd_space = r'(፡፡|፡-|፤-)'
+    line = re.sub(double_wrd_space, substitue_punctuations, line)
+
+    # match ethiopic punc chars not followed by space (except those before closing parens),
+    # closing paren directly followed by opening paren `][`, `)(`
+    lack_space_ptrn = r'([፣፦፥፧፡፤፠።፨](?!\)|\])\S|\]\[|\)\()'
+    # add space after first char in match
+    line = re.sub(lack_space_ptrn, add_space_after_char, line)
+
+    # matches repetition of (.|_|…) with optional one char at start & end
+    # TODO: add other repetitive chars to remove here
+    repeat_pattern = r'(.?([\._]{4,}|…{2,}).?)'
+    # replace repetitions of punctuations
+    line = re.sub(repeat_pattern, remove_repetitive_punctuations, line)
+
+    # TODO: CHECK IF LINE IS ALL PUNCTUATIONS (including Ethiopic)
 
     # split line by space b/n words (to fix spacing)
     cleaned_line_wrds = line.split()
 
-    # TODO: add space after punctuations in long words(len()>15)
     return cleaned_line_wrds
 
 

@@ -77,7 +77,7 @@ for input_file_path in iglob(pathname, recursive=True):
                 # remove chars that are non Ethiopic & not allowed
                 allowed_line = remove_non_ethiopic(line)
 
-                # remove repetetive dots & fix spacing b/n words
+                # clean line
                 cleaned_line_wrds = clean_line(allowed_line)
 
                 # join words into one line
