@@ -83,10 +83,11 @@ def remove_extra_dots(match: re.Match):
     dots: str = match.group()
     # start, dot & end of match group
     start, dot, end = dots[0], dots[1], dots[-1]
-
     # if there is a char (other than space) before or after dots, add space
-    r_start = '' if start in ['.', '…'] or start.isspace() else start + ' '
-    r_end = '' if end in ['.', '…'] or end.isspace() else ' ' + end
+    r_start = '' if start in ['.', '…'] else (
+        start + ' ' if not start.isspace() else start)
+    r_end = '' if end in ['.', '…'] else (
+        ' ' + end if not end.isspace() else end)
 
     # use three `.` or one `…`
     r_dot = dot * 3 if dot == '.' else dot
