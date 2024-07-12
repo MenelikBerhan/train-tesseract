@@ -3,8 +3,7 @@
 Utilities for preparing & cleaning txt files
 """
 import re
-# autopep8: off
-# fmt: off
+
 
 allowed_non_eth_chars = {
     # minus, en & em dashes (rep: minus-hiphen(-))
@@ -65,14 +64,17 @@ def remove_non_ethiopic(line: str):
     return re.sub(r'.', remove_non_ethiopic_helper, line)
 
 
-def is_all_allowed_non_ethiopic(line: str):
+def line_is_all_punc(line: str):
     """
     Returns True if line is empty or all chars in line are allowed
-    non Ethiopic chars. To be used before writing cleaned text to output.
+    non Ethiopic chars or Ethiopic punctuations. To be used before
+    writing cleaned text to output.
 
-    Reason: No need for a line that does not contain any Ethiopic char.
+    Reason: No need for a line that does not contain any Ethiopic letter.
     """
-    return all([char in allowed_non_eth_chars for char in line])
+    return all([
+        char in allowed_non_eth_chars.union(eth_puncs) for char in line]
+    )
 
 
 def remove_repetitive_punctuations(match: re.Match):
@@ -113,6 +115,7 @@ def add_space_after_char(match: re.Match):
     # add space & return
     return chars[0] + ' ' + chars[1]
 
+
 def substitue_punctuations(match: re.Match):
     """
     Replaces incorrectly represented Ethiopic punctuations with proper one.
@@ -126,6 +129,21 @@ def substitue_punctuations(match: re.Match):
     if chars not in punc_dict:
         raise ValueError('Incorrect characters Matched!')
     return punc_dict[chars]
+
+
+def add_space_bfr_paren(match: re.Match):
+    """
+    Adds a space before opening parenthesis.
+    """
+    chars = match.group()
+    # atleast 6 = 2 eth chars + open paren + 3 chars bfr close
+    if len(chars) < 6:
+        raise ValueError('Length of Match Less than Six!')
+    i_paren = chars.find('(')
+    if i_paren == -1:
+        raise ValueError('No open Parenthesis in Match!')
+
+    return chars[: i_paren] + ' ' + chars[i_paren:]
 
 
 def clean_line(line: str):
@@ -146,12 +164,13 @@ def clean_line(line: str):
     chars_to_strip = '+|, \t\n'
     line = line.strip(chars_to_strip)
 
-    # TODO: parens with only space in between
+    # TODO: space before opening parens
+    # TODO: space surrounded |
 
     # match `፡፡`, `፡-` & `፤-` and replace with `።`, `፦` & `፤ `
     # NOTE: `፤-` is a peculiar case for DTW-All-Chapters.txt
-    double_wrd_space = r'(፡፡|፡-|፤-)'
-    line = re.sub(double_wrd_space, substitue_punctuations, line)
+    to_replace_punc_ptrn = r'(፡፡|፡-|፤-)'
+    line = re.sub(to_replace_punc_ptrn, substitue_punctuations, line)
 
     # match ethiopic punc chars not followed by space (except those before closing parens),
     # closing paren directly followed by opening paren `][`, `)(`
@@ -164,6 +183,17 @@ def clean_line(line: str):
     repeat_pattern = r'(.?([\._]{4,}|…{2,}).?)'
     # replace repetitions of punctuations
     line = re.sub(repeat_pattern, remove_repetitive_punctuations, line)
+
+    # matches PARENTHESIS () with empty, space or only punc characters.
+    # remnant of removed non-allowed non-Ethiopic chars
+    junk_paren_ptrn = r'\([-\[’|\\−«:_–^፨።—፦"“,*`;፡፧=…$፤%•\{?›፥<! \t~”\]>\}‘፣/፠‹+.\'#»]*\)'
+    # replace junk paren with empty string
+    line = re.sub(junk_paren_ptrn, '', line)
+
+    # match 2 or more ethiopic chars followed by a parenthesis containing
+    # atleast 3 characters. (Peculiar to Dictionaries)
+    no_space_paren = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
+    line = re.sub(no_space_paren, add_space_bfr_paren, line)
 
     # TODO: CHECK IF LINE IS ALL PUNCTUATIONS (including Ethiopic)
 

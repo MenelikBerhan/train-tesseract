@@ -4,14 +4,12 @@ Cleans txt files by removing undesired non Ethiopic characters,
 fixing spacing b/n words and unwanted character repetitions. 
 """
 import os
-import re
 from glob import iglob
 
-from utils import clean_line, is_all_allowed_non_ethiopic, remove_non_ethiopic
+from utils import clean_line, line_is_all_punc, remove_non_ethiopic
 
 
 # TODO: Check for space b/n punctuations and words
-# TODO: Continous . in table of contents
 # TODO: Replace some variations of punctuations with z most common one (.-)
 #       :... Check Ethiopic Unicharset File
 
@@ -83,8 +81,9 @@ for input_file_path in iglob(pathname, recursive=True):
                 # join words into one line
                 final_line = " ".join(cleaned_line_wrds)
 
-                # skip if final line is all allowed non Ethiopic or empty
-                if is_all_allowed_non_ethiopic(final_line):
+                # skip if final line is empty or all allowed non-Ethiopic
+                # +or Ethiopic punctuations
+                if line_is_all_punc(final_line):
                     continue
 
                 # append newline at the end & write line to output file

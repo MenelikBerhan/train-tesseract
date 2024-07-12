@@ -9,7 +9,6 @@ import os
 import re
 from glob import iglob
 
-from utils import remove_non_ethiopic
 
 allowed_non_eth_chars = {
     # minus, en & em dashes (rep: minus-hiphen(-))
@@ -30,9 +29,9 @@ allowed_non_eth_chars = {
 }
 eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
 
-out_path = './test-punc-punc.txt'
+out_path = './test-paren-space-clean.txt'
 c = 0
-pathname = os.path.join('../training_texts/', '**', '*.txt')
+pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
 prob_files: 'dict[str, list[tuple]]' = {}
 for file_path in iglob(pathname, recursive=True):
     with open(file_path) as in_file:
@@ -42,12 +41,21 @@ for file_path in iglob(pathname, recursive=True):
             if line.isspace() or line == '':
                 continue
             # wrds = line.split()
-            if re.search(r'[፣፦፥፧፡፤፠።፨]{1}[-]{1}', line) != None:
+            # p = r'\[[-\(’|\\−«:_–^፨።—፦"“,*`;፡፧=…$፤%•\{?›፥<! \t~”\)>\}‘፣/፠‹+.\'#»]*\]'
+            # p = r'\S\([^\)]{3,}'
+            p = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
+            if re.search(p, line) != None:
+                s = re.search(p, line).group() # type: ignore
                 if file_path in prob_files:
-                    prob_files[file_path].append((l, line))
+                    prob_files[file_path].append((l, line, s))
                 else:
-                    prob_files[file_path] = [(l, line)]
+                    prob_files[file_path] = [(l, line, s)]
 
+def add_s(match: re.Match):
+    m: str = match.group()
+    print(m, match.groupdict())
+    i = m.find('(')
+    return m[:i] + ' ' + m[i:]
 
 print(len(prob_files))
 k = list(prob_files.keys())
@@ -57,7 +65,7 @@ with open(out_path, 'w') as file:
         # print(f'{f}: {prob_files[f]}')
         to_write = f'{f} ({len(prob_files[f])} Lines)\n'
         for line_info in prob_files[f]:
-            to_write += f'{line_info[0]}: "{line_info[1].strip()}"\n'
+            to_write += f'{line_info[0]}: "{line_info[2].strip()}": "{line_info[1].strip()}"\n'
         file.write(to_write + '\n')
 
 
