@@ -9,10 +9,6 @@ from glob import iglob
 from utils import clean_line, line_is_all_punc, remove_non_ethiopic
 
 
-# TODO: Check for space b/n punctuations and words
-# TODO: Replace some variations of punctuations with z most common one (.-)
-#       :... Check Ethiopic Unicharset File
-
 input_root_dir = '../training_texts/'
 output_root_dir = './cleaned_texts'
 overwrite_output_file = True
