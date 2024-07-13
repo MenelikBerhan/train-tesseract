@@ -31,6 +31,20 @@ eth_digits = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',
 eth_nums = {0: '', 1: '፲', 2: '፳', 3: '፴', 4: '፵', 5: '፶',
             6: '፷', 7: '፸', 8: '፹', 9: '፺', 10: '፻', 1000: '፼'}
 
+# all junk enclosures list with same index for matching start-end pair
+enclosure_start_list = [
+    '(', '[', '{', '‘', '“', '‹', '<', '`', '"', '\'', '/', '|', ',']
+enclosure_end_list = [')', ']', '}', '’', '”',
+                      '›', '>', '`', '"', '\'', '/', '|', ',']
+# start and end enclosures are the same
+same_enclosure_list = ['`', '"', '\'', '/', '|',]
+
+junk_enclosure_start_ptrns = [
+    r'\(', r'\[', r'\{', r'‘', r'“', r'‹', r'<', r'`', r'"', r'\'', r'/', r'\|']
+junk_enclosure_end_ptrns = [r'\)', r'\]', r'\}', r'’', r'”',
+                            r'›', r'>', r'`', r'"', r'\'', r'/', r'\|']
+junk_content_ptrn = r'[\-\[’|\\−«:_–\^፨።—፦"“,*`;፡፧=…$፤%•{?›፥<! \t~”\]>}‘፣/፠‹+.\'#»]*'
+
 
 def remove_non_ethiopic_helper(match: re.Match):
     """
@@ -102,7 +116,7 @@ def remove_repetitive_punctuations(match: re.Match):
 def add_space_after_char(match: re.Match):
     """
     Adds a space after Ethiopic punctuation characters,
-    between `]` & `[` and `)` & `()`.
+    between `]` & `[`, and `)` & `(`.
     """
     before_space_chars = eth_puncs.union({']', ')'})
     # get matched chars
@@ -146,6 +160,89 @@ def add_space_bfr_paren(match: re.Match):
     return chars[: i_paren] + ' ' + chars[i_paren:]
 
 
+def remove_junk_helper(match: 're.Match[str]'):
+    """
+    Removes matched junk content along with (but not always)
+    its enclosures.
+
+    Enclosure is marked by start and end characters. `match` contains
+    an optional char at start before enc but always contain one char
+    at the end making enc. end second to last.
+
+    NOTE:
+        - To identify junk enclosure, make sure match has at least
+        one non enclosure char at end. This way the second to last char
+        can always be used to identify the correct enclosure.
+
+        - if the char before enc. start & after enc. end is non space
+        it won't be removed.
+
+        - for same enclosure types, if a char prev to start enc or nxt to
+        end enc is not a space, the start or end enc. along with the adjacent
+        char are not removed. This is so to avoid removing match b/n end and
+        start, e.g.: "/ማየት/, / . ^/'/እዩት/" will be "/ማየት/ /እዩት/".
+    """
+    # TODO: check if no content b/n enc. start & enc. end
+    matched_junk = match.group()
+    # start and end of matched junk
+    j_start, j_end = matched_junk[0], matched_junk[-1]
+
+    # find junc enclosure start using the enclosure end index.
+    # second to last in match is always end enclosure.
+    i_enclosure_end = enclosure_end_list.index(matched_junk[-2])
+    enclosure_end = enclosure_end_list[i_enclosure_end]
+    enclosure_start = enclosure_start_list[i_enclosure_end]
+
+    same_enclosure = enclosure_start in same_enclosure_list
+
+    if same_enclosure:
+        assert enclosure_end in same_enclosure_list, \
+            f"MIS MATCH IN SAME ENCLOSURE{enclosure_start + '  :  ' + enclosure_end}"
+
+    # find substitution end
+    if same_enclosure:
+        # dont remove enc. end and nxt char if non space at end
+        sub_end = '' if j_end.isspace() else enclosure_end + j_end
+    else:
+        # dont remove the char after enc. end (last) if its non space
+        sub_end = '' if j_end.isspace() else j_end
+
+    sub_start = ''
+    # if there is a char before enc. start find sub start
+    if j_start != enclosure_start:
+        if same_enclosure:
+            # dont remove enc. and adjacent char if non space at start or end
+            sub_start = '' if j_start.isspace() else j_start + enclosure_start
+        else:
+            # dont remove start and end chars if they are non space
+            sub_start = '' if j_start.isspace() else j_start
+
+    # return by adding space in middle not to concat separate words
+    return sub_start + ' ' + sub_end
+
+
+def remove_junk_in_enclosures(line: str):
+    """
+    Removes unwanted characters found b/n enclosing chars like parenthese and
+    quotes. Mostly they are result of removing non Ethiopic chars.
+    """
+    # to make sure at least one char exist after end enclosure
+    # see remove_junk_helper
+    if line and not line[-1].isspace():
+        line += ' '
+    # loop over each enclosures
+    for i in range(len(junk_enclosure_start_ptrns)):
+        # pattern to match junk with an optional char at start and end
+        pattern = r'(.|\n)?' + junk_enclosure_start_ptrns[i] +\
+            junk_content_ptrn + junk_enclosure_end_ptrns[i] +\
+            r'(.|\n)?'
+
+        # replace junk and assign back to line
+        line = re.sub(pattern, remove_junk_helper, line)
+
+    return line
+
+
 def clean_line(line: str):
     """
     Cleans line by:
@@ -153,19 +250,24 @@ def clean_line(line: str):
             which are mostly remnants of lists & tables in source text.
         - substituting improper punctuations with correct one, 
             for example replace `፡፡` with `።`, `፡-` with `፦`.
+        - removing undesired remnants of removing non Ethiopic,
+            by using chars like brackets and quotes as a delimiter.
         - removing repetitions of `.|_` (if > 3) and `…` (if > 1),
             which exist mostly in table of contents of source text.
         - adding or removing space b/n words & punctuations as needed.
 
     Returns: list of words in the cleaned line.
     """
+    # TODO: add other junk enclosures like (.)
+    # TODO: add other repetitive chars to remove (-=?)
+    # TODO: non semantic punctuations at start & end (+.-=,|) aftr space
+    # TODO: space surrounded |, '([])' used in KBT,
+    # TODO: specific puncs repeated excessively in big files (DTW, KBT...)
+
     # strip undesired chars from start & end of line
     # spaces added to strip chars if only space occurs b/n them
     chars_to_strip = '+|, \t\n'
     line = line.strip(chars_to_strip)
-
-    # TODO: space before opening parens
-    # TODO: space surrounded |
 
     # match `፡፡`, `፡-` & `፤-` and replace with `።`, `፦` & `፤ `
     # NOTE: `፤-` is a peculiar case for DTW-All-Chapters.txt
@@ -179,23 +281,20 @@ def clean_line(line: str):
     line = re.sub(lack_space_ptrn, add_space_after_char, line)
 
     # matches repetition of (.|_|…) with optional one char at start & end
-    # TODO: add other repetitive chars to remove here
     repeat_pattern = r'(.?([\._]{4,}|…{2,}).?)'
     # replace repetitions of punctuations
     line = re.sub(repeat_pattern, remove_repetitive_punctuations, line)
 
-    # matches PARENTHESIS () with empty, space or only punc characters.
-    # remnant of removed non-allowed non-Ethiopic chars
-    junk_paren_ptrn = r'\([-\[’|\\−«:_–^፨።—፦"“,*`;፡፧=…$፤%•\{?›፥<! \t~”\]>\}‘፣/፠‹+.\'#»]*\)'
-    # replace junk paren with empty string
-    line = re.sub(junk_paren_ptrn, '', line)
-
     # match 2 or more ethiopic chars followed by a parenthesis containing
     # atleast 3 characters. (Peculiar to Dictionaries)
-    no_space_paren = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
-    line = re.sub(no_space_paren, add_space_bfr_paren, line)
+    no_space_bfr_paren = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
+    line = re.sub(no_space_bfr_paren, add_space_bfr_paren, line)
 
-    # TODO: CHECK IF LINE IS ALL PUNCTUATIONS (including Ethiopic)
+    # remove unwanted content enclosed by chars like paren & quotes
+    # result of removed non Ethopic chars
+    line = remove_junk_in_enclosures(line)
+
+    # TODO: CHECK IF LINE IS ALL PUNCTUATIONS HERE (including Ethiopic)
 
     # split line by space b/n words (to fix spacing)
     cleaned_line_wrds = line.split()

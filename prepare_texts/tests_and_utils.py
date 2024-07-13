@@ -9,8 +9,10 @@ import os
 import re
 from glob import iglob
 
+from utils import remove_junk_in_enclosures
 
-allowed_non_eth_chars = {
+
+allowed_non_eth_charsss = {
     # minus, en & em dashes (rep: minus-hiphen(-))
     '−', '–', '—',
     # dots (rep: . [for '…'])
@@ -28,37 +30,10 @@ allowed_non_eth_chars = {
     '(', ')', '[', ']', '{', '}'
 }
 eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
-same_encl = ['`', '"', '\'', '/', '|',]
-start_encl = ['(', '[', '{', '‘', '“', '‹', '<', '`', '"', '\'', '/', '|', ',']
-end_encl = [')', ']', '}', '’', '”', '›', '>', '`', '"', '\'', '/', '|', ',']
 
-def sub_e(match):
-    m: str = match.group()
-    # print(f'Match: "{m}"')
-    s, e = m[0], m[-1]
-    s_enclosure = start_encl[end_encl.index(m[-2])]
-    # if s in start_encl:      # matched at start of line
-    if s == s_enclosure:      # matched at start of line
-        # s_enclosure = m[0]
-        if s_enclosure in same_encl:
-            r_e = '' if e.isspace() else s_enclosure + e
-        else:
-            r_e = '' if e.isspace() else e
-        return ' ' + r_e
-    else:   # inside line
-        # s_enclosure = m[1]
-        if s_enclosure in same_encl:
-            r_s = '' if s.isspace() else s + s_enclosure
-            r_e = '' if e.isspace() else s_enclosure + e
-        else:
-            r_s = '' if s.isspace() else s
-            r_e = '' if e.isspace() else e
-
-        return r_s + ' ' + r_e
-
-
-out_path = './test-empty-paren-clean.txt'
+out_path = './test-strt-end-clean.txt'
 c = 0
+
 pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
 prob_files: 'dict[str, list[tuple]]' = {}
 for file_path in iglob(pathname, recursive=True):
@@ -68,26 +43,15 @@ for file_path in iglob(pathname, recursive=True):
             l += 1
             if line.isspace() or line == '':
                 continue
-            same = [r'`', r'"', r'\'', r'/', r'\|',]
-            start = [r'\(', r'\[', r'\{', r'‘', r'“', r'‹', r'<', r'`', r'"', r'\'', r'/', r'\|']
-            end = [r'\)', r'\]', r'\}', r'’', r'”', r'›', r'>', r'`', r'"', r'\'', r'/', r'\|']
-            # wrds = line.split()
-            m = r'[\-\[’|\\−«:_–\^፨።—፦"“,*`;፡፧=…$፤%•{?›፥<! \t~”\]>}‘፣/፠‹+.\'#»]*'
-            for i in range(len(start)):
-                p = r'(.|\n)?' + start[i] + m + end[i] + r'(.|\n)?'
-                if re.search(p, line) != None:
-                    s = re.sub(p, sub_e, line) # type: ignore
-                    if file_path in prob_files:
-                        prob_files[file_path].append((l, line, s))
-                    else:
-                        prob_files[file_path] = [(l, line, s)]
-                    line = s
 
-def add_s(match: re.Match):
-    m: str = match.group()
-    print(m, match.groupdict())
-    i = m.find('(')
-    return m[:i] + ' ' + m[i:]
+            s = remove_junk_in_enclosures(line) # type: ignore
+            if s != line:
+                if file_path in prob_files:
+                    if len(prob_files[file_path]) > 3000:
+                        break
+                    prob_files[file_path].append((l, line, s))
+                else:
+                    prob_files[file_path] = [(l, line, s)]
 
 print(len(prob_files))
 k = list(prob_files.keys())
