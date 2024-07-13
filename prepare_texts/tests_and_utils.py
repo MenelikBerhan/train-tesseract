@@ -28,8 +28,36 @@ allowed_non_eth_chars = {
     '(', ')', '[', ']', '{', '}'
 }
 eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
+same_encl = ['`', '"', '\'', '/', '|',]
+start_encl = ['(', '[', '{', '‘', '“', '‹', '<', '`', '"', '\'', '/', '|', ',']
+end_encl = [')', ']', '}', '’', '”', '›', '>', '`', '"', '\'', '/', '|', ',']
 
-out_path = './test-paren-space-clean.txt'
+def sub_e(match):
+    m: str = match.group()
+    # print(f'Match: "{m}"')
+    s, e = m[0], m[-1]
+    s_enclosure = start_encl[end_encl.index(m[-2])]
+    # if s in start_encl:      # matched at start of line
+    if s == s_enclosure:      # matched at start of line
+        # s_enclosure = m[0]
+        if s_enclosure in same_encl:
+            r_e = '' if e.isspace() else s_enclosure + e
+        else:
+            r_e = '' if e.isspace() else e
+        return ' ' + r_e
+    else:   # inside line
+        # s_enclosure = m[1]
+        if s_enclosure in same_encl:
+            r_s = '' if s.isspace() else s + s_enclosure
+            r_e = '' if e.isspace() else s_enclosure + e
+        else:
+            r_s = '' if s.isspace() else s
+            r_e = '' if e.isspace() else e
+
+        return r_s + ' ' + r_e
+
+
+out_path = './test-empty-paren-clean.txt'
 c = 0
 pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
 prob_files: 'dict[str, list[tuple]]' = {}
@@ -40,16 +68,20 @@ for file_path in iglob(pathname, recursive=True):
             l += 1
             if line.isspace() or line == '':
                 continue
+            same = [r'`', r'"', r'\'', r'/', r'\|',]
+            start = [r'\(', r'\[', r'\{', r'‘', r'“', r'‹', r'<', r'`', r'"', r'\'', r'/', r'\|']
+            end = [r'\)', r'\]', r'\}', r'’', r'”', r'›', r'>', r'`', r'"', r'\'', r'/', r'\|']
             # wrds = line.split()
-            # p = r'\[[-\(’|\\−«:_–^፨።—፦"“,*`;፡፧=…$፤%•\{?›፥<! \t~”\)>\}‘፣/፠‹+.\'#»]*\]'
-            # p = r'\S\([^\)]{3,}'
-            p = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
-            if re.search(p, line) != None:
-                s = re.search(p, line).group() # type: ignore
-                if file_path in prob_files:
-                    prob_files[file_path].append((l, line, s))
-                else:
-                    prob_files[file_path] = [(l, line, s)]
+            m = r'[\-\[’|\\−«:_–\^፨።—፦"“,*`;፡፧=…$፤%•{?›፥<! \t~”\]>}‘፣/፠‹+.\'#»]*'
+            for i in range(len(start)):
+                p = r'(.|\n)?' + start[i] + m + end[i] + r'(.|\n)?'
+                if re.search(p, line) != None:
+                    s = re.sub(p, sub_e, line) # type: ignore
+                    if file_path in prob_files:
+                        prob_files[file_path].append((l, line, s))
+                    else:
+                        prob_files[file_path] = [(l, line, s)]
+                    line = s
 
 def add_s(match: re.Match):
     m: str = match.group()
@@ -65,7 +97,7 @@ with open(out_path, 'w') as file:
         # print(f'{f}: {prob_files[f]}')
         to_write = f'{f} ({len(prob_files[f])} Lines)\n'
         for line_info in prob_files[f]:
-            to_write += f'{line_info[0]}: "{line_info[2].strip()}": "{line_info[1].strip()}"\n'
+            to_write += f'{line_info[0]}: "{line_info[1].strip()}":\n"{line_info[2].strip()}"\n'
         file.write(to_write + '\n')
 
 
