@@ -63,7 +63,7 @@ def remove_non_ethiopic_helper(match: re.Match):
         char in allowed_non_eth_chars or
         # ethiopic unicode except combining marks(not needed)
         (ord(char) not in range(0x135d, 0x1360) and
-            0x1200 <= ord(char) <= 0x137F)
+            0x1200 <= ord(char) <= 0x137c)
     ):
         return ''
     # else return char it self
@@ -125,6 +125,11 @@ def add_space_after_char(match: re.Match):
         raise ValueError('Length of Match not Equal to Two!')
     if chars[0] not in before_space_chars:
         raise ValueError('Incorrect char at Start of Match!')
+
+    # TODO: for some eth punc chars like `።`, check if nxt char
+    # is closing bracket or quote and if so, don't add space
+    # if chars[0] == '።' and chars[1] in enclosure_end_list:
+    #     return chars
 
     # add space & return
     return chars[0] + ' ' + chars[1]
@@ -262,7 +267,10 @@ def clean_line(line: str):
     # TODO: add other repetitive chars to remove (-=?)
     # TODO: non semantic punctuations at start & end (+.-=,|) aftr space
     # TODO: space surrounded |, '([])' used in KBT,
-    # TODO: specific puncs repeated excessively in big files (DTW, KBT...)
+    # TODO: specific puncs repeated excessively in big files and fiction books
+    # ... chars like <<, () [], in files like (DTW, KBT) & ones in books/misc
+    # ... year and dates limited to newspaper articles source time (1990-8)
+    # TODO: common articles repeated in d/t newspapers around same time
 
     # strip undesired chars from start & end of line
     # spaces added to strip chars if only space occurs b/n them
