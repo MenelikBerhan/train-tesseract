@@ -19,7 +19,7 @@ allowed_non_eth_chars = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     # quotes (rep: " and ')
     '"', "'", '‘', '’', '“', '”', '«', '»', '‹', '›', '`',
-    # parentheses (rep: as is)
+    # brackets (rep: as is)
     '(', ')', '[', ']', '{', '}'
 }
 
@@ -135,7 +135,7 @@ def add_space_after_char(match: re.Match):
     return chars[0] + ' ' + chars[1]
 
 
-def substitue_punctuations(match: re.Match):
+def substitue_correct_punctuations(match: re.Match):
     """
     Replaces incorrectly represented Ethiopic punctuations with proper one.
     Example: replaces `፡፡` with `።`, `፡-` with `፦` & `፤-` with `፤ `.
@@ -152,15 +152,18 @@ def substitue_punctuations(match: re.Match):
 
 def add_space_bfr_paren(match: re.Match):
     """
-    Adds a space before opening parenthesis.
+    Adds a space before an opening parenthesis. Used to fix
+    lack of space b/n a word and it's synonym/alternate in dicts.
+
+    match must contain 3 Ethiopic chars, an open parenthesis,
+    then at least three chars that are not a closing paren.
     """
     chars = match.group()
     # atleast 6 = 2 eth chars + open paren + 3 chars bfr close
-    if len(chars) < 6:
-        raise ValueError('Length of Match Less than Six!')
+    assert len(chars) >= 6, 'Length of Match Less than Six!'
+    # an
     i_paren = chars.find('(')
-    if i_paren == -1:
-        raise ValueError('No open Parenthesis in Match!')
+    assert i_paren == -1, 'No open Parenthesis in Match!'
 
     return chars[: i_paren] + ' ' + chars[i_paren:]
 
@@ -228,7 +231,7 @@ def remove_junk_helper(match: 're.Match[str]'):
 
 def remove_junk_in_enclosures(line: str):
     """
-    Removes unwanted characters found b/n enclosing chars like parenthese and
+    Removes unwanted characters found b/n enclosing chars like brackets and
     quotes. Mostly they are result of removing non Ethiopic chars.
     """
     # to make sure at least one char exist after end enclosure
@@ -280,10 +283,11 @@ def clean_line(line: str):
     # match `፡፡`, `፡-` & `፤-` and replace with `።`, `፦` & `፤ `
     # NOTE: `፤-` is a peculiar case for DTW-All-Chapters.txt
     to_replace_punc_ptrn = r'(፡፡|፡-|፤-)'
-    line = re.sub(to_replace_punc_ptrn, substitue_punctuations, line)
+    line = re.sub(to_replace_punc_ptrn, substitue_correct_punctuations, line)
 
-    # match ethiopic punc chars not followed by space (except those before closing parens),
-    # closing paren directly followed by opening paren `][`, `)(`
+    # match ethiopic punc chars not followed by space (except those before
+    # closing brackets) and closing brackets directly followed by opening
+    # brackets `][`, `)(`. (The latter peculiar to some dicts. [Kidnae?])
     lack_space_ptrn = r'([፣፦፥፧፡፤፠።፨](?!\)|\])\S|\]\[|\)\()'
     # add space after first char in match
     line = re.sub(lack_space_ptrn, add_space_after_char, line)
@@ -293,13 +297,13 @@ def clean_line(line: str):
     # replace repetitions of punctuations
     line = re.sub(repeat_pattern, remove_repetitive_punctuations, line)
 
-    # match 2 or more ethiopic chars followed by a parenthesis containing
-    # atleast 3 characters. (Peculiar to Dictionaries)
+    # match 2 or more ethiopic chars followed by an open parenthesis and
+    # atleast other 3 characters. (Peculiar to Dictionaries)
     no_space_bfr_paren = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
     line = re.sub(no_space_bfr_paren, add_space_bfr_paren, line)
 
-    # remove unwanted content enclosed by chars like paren & quotes
-    # result of removed non Ethopic chars
+    # remove unwanted content (junk) enclosed by chars like brackets & quotes,
+    # which exist mostly because non Ethopic chars were removed previously
     line = remove_junk_in_enclosures(line)
 
     # TODO: CHECK IF LINE IS ALL PUNCTUATIONS HERE (including Ethiopic)
