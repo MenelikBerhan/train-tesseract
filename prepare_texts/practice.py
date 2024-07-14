@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # autopep8: off
+# fmt: off
 """
 Testing Ground for cleaning txt files
 """
@@ -27,42 +28,173 @@ allowed_non_eth_charsss = {
     # quotes (rep: " and ')
     '"', "'", '‘', '’', '“', '”', '«', '»', '‹', '›', '`',
     # parentheses (rep: as is)
-    '(', ')', '[', ']', '{', '}'
+    '(', ')', '[', ']', '{', '}',
+    '፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨',
 }
 eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
-
+ALERT = 'ሰለ እዚህ ዜና ዋርካ ስር በአማርኛ ይወያዩ !' # repeated advert in newspaper (1997,8)
 out_path = './test-strt-end-clean.txt'
 c = 0
+# r'^[$/<‘~:^'\t’«>› (|?;-\]_−{\n“=)•`,[—»…*#\\"–.}+%‹!”]{3,}'
+# (^[0-9]{1,4}: [$/<‘~:^'\t’«>› (|?;\-\]_−{\n“=)•`,[—»…*#\\"–.}+%‹!”]{3,}.?|.?[$/<‘~:^'\t’«>› (|?;\-\]_−{\n“=)•`,[—»…*#\\"–.}+%‹!”]{3,}$)
 
-pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
-prob_files: 'dict[str, list[tuple]]' = {}
-for file_path in iglob(pathname, recursive=True):
-    with open(file_path) as in_file:
-        l = 0
-        for line in in_file.readlines():
-            l += 1
-            if line.isspace() or line == '':
-                continue
+eth_unicode_range_all = range(0x1200, 0x137d)
+eth_unicode_range_letters = range(0x1200, 0x135b)
+eth_unicode_range_marks = range(0x135d, 0x1360)   # Combining marks- not needed
+eth_unicode_range_punc = range(0x1360, 0x1369)
+eth_unicode_range_num = range(0x1369, 0x137d)
 
-            s = remove_junk_in_enclosures(line) # type: ignore
-            if s != line:
-                if file_path in prob_files:
-                    if len(prob_files[file_path]) > 3000:
-                        break
-                    prob_files[file_path].append((l, line, s))
-                else:
-                    prob_files[file_path] = [(l, line, s)]
+remove_frm_start_and_end = '$/<‘~:^\'\t’«>› (|?;-]_−{\n“=)•`,[—»…*#\\"–.}+%‹!”'
+to_keep_start = {'brackets': ['(', '[', '/'], 'quotes': ['“', '«', '‹', '"', "'"], 'others': ['.', '-']}
+to_keep_end = {'brackets': [')', ']', '/'], 'quotes': ['”', '»', '›', '"', "'"], 'others': ['?', '!', '-', '.', '%']}
+def clean_strt_and_end(match: 're.Match[str]'):
+    """
+    ALWAYS DO NOT remove last char of m (for start match) or first char of m
+    (for end match) if its not in remove_frm_start_and_end.
 
-print(len(prob_files))
-k = list(prob_files.keys())
-k.sort(key=lambda x: len(prob_files[x]), reverse=True)
-with open(out_path, 'w') as file:
-    for f in k:
-        # print(f'{f}: {prob_files[f]}')
-        to_write = f'{f} ({len(prob_files[f])} Lines)\n'
-        for line_info in prob_files[f]:
-            to_write += f'{line_info[0]}: "{line_info[1].strip()}":\n"{line_info[2].strip()}"\n'
-        file.write(to_write + '\n')
+    if last char of m (for start match) or first char of m (for end match)
+    is ethiopic (including no.s & puncs) or arabic num, DO NOT remove
+    adjacent char if it is in dont_remove_start or dont_remove_end.
+    TODO: In addition DO NOT remove next char if it is a quote or bracket char in dont_remove_start
+    or dont_remove_end unless the prev. one is also a quote or bracket or `-` for end.
+    e.g. '+ ]"(ግ?"/ .' will be '""ግ?>"', 'ሀ።» -' will be '"ሀ።»'
+    ALSO FOR END: ??, ?!, !?, !! or !!! , ግ..., (ተደ.አ.)
+    FOR START: ...ግ
+    for arabic num at start of end match: CONSIDER (70%)
+    """
+    matched_chars = match.group()
+    # print(f'MATCH: "{matched_chars}"')
+    # find if match is from line start or end or both (the whole line)
+    match_is_at_start = matched_chars[-1] not in remove_frm_start_and_end
+    match_is_at_end = matched_chars[0] not in remove_frm_start_and_end
+    # print(f'START: {match_is_at_start}, END: {match_is_at_end}')
+    if not match_is_at_start and not match_is_at_end:   # remove the whole line 
+        return ''
+    match_len = len(matched_chars)
+    assert match_len >= 4, f'MATCH "{matched_chars}" LENGTH LESS THAN FOUR'
+
+    if match_is_at_start:   # removing chars from line start
+        anchor_char = matched_chars[-1]
+        anchor_is_ethiopic = ord(anchor_char) in eth_unicode_range_all and\
+        ord(anchor_char) not in eth_unicode_range_marks
+        anchor_is_arabic_num = ord(anchor_char) in range(48, 58)
+        to_keep = anchor_char
+        if anchor_is_ethiopic or anchor_is_arabic_num:
+            if matched_chars[-2] in to_keep_start['brackets']:
+                to_keep = matched_chars[-2] + to_keep
+                if matched_chars[-3] in to_keep_start['quotes']:
+                    to_keep = matched_chars[-3] + to_keep
+            elif matched_chars[-2] in to_keep_start['quotes']:
+                to_keep = matched_chars[-2] + to_keep
+                if matched_chars[-3] in to_keep_start['brackets']:
+                    to_keep = matched_chars[-3] + to_keep
+            elif matched_chars[-2] in to_keep_start['others']:
+                if matched_chars[-2] == '-':
+                    to_keep = matched_chars[-2] + to_keep
+                elif matched_chars[-4: -1] == '...':
+                    to_keep = matched_chars[-4: -1] + to_keep
+                    if match_len > 4:
+                        if matched_chars[-5] in to_keep_start['brackets']:
+                            to_keep = matched_chars[-5] + to_keep
+                            if match_len > 5 and matched_chars[-6] in to_keep_start['quotes']:
+                                to_keep = matched_chars[-6] + to_keep
+                        elif matched_chars[-5] in to_keep_start['quotes']:
+                            to_keep = matched_chars[-5] + to_keep
+                            if match_len > 5 and matched_chars[-6] in to_keep_start['brackets']:
+                                to_keep = matched_chars[-6] + to_keep
+
+    else:                   # removing chars from line end
+        anchor_char = matched_chars[0]
+        anchor_is_ethiopic = ord(anchor_char) in eth_unicode_range_all and\
+        ord(anchor_char) not in eth_unicode_range_marks
+        anchor_is_arabic_num = ord(anchor_char) in range(48, 58)
+        to_keep = anchor_char
+        if anchor_is_ethiopic or anchor_is_arabic_num:
+            # print('ANCHOR ETHIOPIC')
+            if matched_chars[1] in to_keep_end['brackets']:
+                to_keep = to_keep + matched_chars[1]
+                if matched_chars[2] in to_keep_end['quotes']:
+                    to_keep = to_keep + matched_chars[2]
+            elif matched_chars[1] in to_keep_end['quotes']:
+                to_keep = to_keep + matched_chars[1]
+                if matched_chars[2] in to_keep_end['brackets']:
+                    to_keep = to_keep + matched_chars[2]
+            elif matched_chars[1] in to_keep_end['others']:
+                bracket_or_quote_index = 0
+                if anchor_is_arabic_num and matched_chars[1] == '%':
+                    to_keep = to_keep + matched_chars[1]
+                    bracket_or_quote_index = 2
+                if matched_chars[1] == '-':
+                    to_keep = to_keep + matched_chars[1]
+                    bracket_or_quote_index = 2
+                elif matched_chars[1] == '.':
+                    if matched_chars[1: 4] == '...':
+                        to_keep = to_keep + matched_chars[1: 4]
+                        bracket_or_quote_index = 4
+                    else:
+                        to_keep = to_keep + matched_chars[1]
+                        bracket_or_quote_index = 2
+                elif matched_chars[1] in ['?', '!']:
+                    if matched_chars[1: 3] in ['??', '?!', '!?', '!!']:
+                        to_keep = to_keep + matched_chars[1: 3]
+                        bracket_or_quote_index = 3
+                    elif matched_chars[1: 4] == '!!!':
+                        to_keep = to_keep + matched_chars[1: 4]
+                        bracket_or_quote_index = 4
+                    else:
+                        to_keep = to_keep + matched_chars[1]
+                        bracket_or_quote_index = 2
+                if bracket_or_quote_index < match_len :
+                    i = bracket_or_quote_index
+                    if matched_chars[i] in to_keep_end['brackets']:
+                        to_keep = to_keep + matched_chars[i]
+                        if i + 1 < match_len and matched_chars[i + 1] in to_keep_end['quotes']:
+                            to_keep = to_keep + matched_chars[i + 1]
+                    elif matched_chars[i] in to_keep_end['quotes']:
+                        to_keep = to_keep + matched_chars[i]
+                        if i + 1 < match_len and matched_chars[i + 1] in to_keep_end['brackets']:
+                            to_keep = to_keep + matched_chars[i + 1]
+
+    return to_keep
+
+if __name__ == '__main__':
+    pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
+    prob_files: 'dict[str, list[tuple[int, str, str]]]' = {}
+    for file_path in iglob(pathname, recursive=True):
+        with open(file_path) as in_file:
+            l = 0
+            for line in in_file.readlines():
+                l += 1
+                if line.isspace() or line == '':
+                    continue
+                # remove = r'[፤$/<‘፣~:\^\'\t’«>›።7 \(\|\?;0\-\]_−፥\{፧\n“=\)•138`፠5,\[—»…9፦፡*#\\2"–.\}፨+6%‹4!”]'
+                # remove = r'[$/<‘~:\^\'\t’«>› \(\|\?;\-\]_−\{\n“=\)•`,\[—»…*#\\"–.\}+%‹!”]'
+                remove = r'[$/<‘~:\^\'\t’«>› \(\|\?;\-\]_−\{\n“=\)•`,\[—»…*#\\"–.\}+%‹!”]'
+                start_p = r'(^' + remove + r'{3,}.?|.?' + remove + r'{3,}$)'
+                # strip_chars = '፤$/<‘፣~:^\'\t’«>›።7 (|?;0-]_−፥{፧\n“=)•138`፠5,[—»…9፦፡*#\\2"–.}፨+6%‹4!”'
+                if re.search(start_p, line) != None:
+                    try:
+                        cleaned_line = re.sub(start_p, clean_strt_and_end, line)
+                    except Exception as e:
+                        print(f'IN: {file_path}')
+                        print(e.args)
+                    if file_path in prob_files:
+                        if len(prob_files[file_path]) > 3000:
+                            print(f"Break too Much in file: {file_path}")
+                            break
+                        prob_files[file_path].append((l, line, cleaned_line))
+                    else:
+                        prob_files[file_path] = [(l, line, cleaned_line)]
+
+    print(len(prob_files))
+    k = list(prob_files.keys())
+    k.sort(key=lambda x: len(prob_files[x]), reverse=True)
+    with open(out_path, 'w') as file:
+        for f in k:
+            to_write = f'{f} ({len(prob_files[f])} Lines)\n'
+            for line_info in prob_files[f]:
+                to_write += f'{line_info[0]}: "{line_info[1].strip()}":\n"{line_info[2].strip()}"\n'
+            file.write(to_write + '\n')
 
 
 """ d1 = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',
