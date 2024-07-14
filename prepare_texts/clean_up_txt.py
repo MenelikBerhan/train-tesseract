@@ -63,7 +63,7 @@ for input_file_path in iglob(pathname, recursive=True):
     with open(input_file_path) as input_file:
         with open(output_file_path, 'w') as output_file:
             # read file content & loop over lines
-            for line in input_file.readlines():
+            for line in input_file:
                 # skip if line is space or empty
                 if line.isspace() or line == '':
                     continue
