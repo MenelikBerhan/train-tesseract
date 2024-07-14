@@ -24,26 +24,38 @@ allowed_non_eth_chars = {
 }
 
 eth_puncs = {'፠', '፡', '።', '፣', '፤', '፥', '፦', '፧', '፨'}
-
 eth_digits = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',
               5: '፭', 6: '፮', 7: '፯', 8: '፰', 9: '፱'}
-
 eth_nums = {0: '', 1: '፲', 2: '፳', 3: '፴', 4: '፵', 5: '፶',
             6: '፷', 7: '፸', 8: '፹', 9: '፺', 10: '፻', 1000: '፼'}
 
-# all junk enclosures list with same index for matching start-end pair
+
 enclosure_start_list = [
     '(', '[', '{', '‘', '“', '‹', '<', '`', '"', '\'', '/', '|', ',']
+"""list of start enclosures that exist only before junk content"""
+
 enclosure_end_list = [')', ']', '}', '’', '”',
                       '›', '>', '`', '"', '\'', '/', '|', ',']
-# start and end enclosures are the same
-same_enclosure_list = ['`', '"', '\'', '/', '|',]
+"""list of end enclosures that exist only after junk content"""
 
+same_enclosure_list = ['`', '"', '\'', '/', '|',]
+"""list of enclosures with identical form at start and end"""
+
+# patterns to match enc starts, junk content and end ends.
 junk_enclosure_start_ptrns = [
     r'\(', r'\[', r'\{', r'‘', r'“', r'‹', r'<', r'`', r'"', r'\'', r'/', r'\|']
+"""list of patterns to match enclosure before junk content."""
+
 junk_enclosure_end_ptrns = [r'\)', r'\]', r'\}', r'’', r'”',
                             r'›', r'>', r'`', r'"', r'\'', r'/', r'\|']
+"""list of patterns to match enclosure after junk content."""
+
 junk_content_ptrn = r'[\-\[’|\\−«:_–\^፨።—፦"“,*`;፡፧=…$፤%•{?›፥<! \t~”\]>}‘፣/፠‹+.\'#»]*'
+"""pattern to match junk content b/n enclosure start and end."""
+
+sentense_end_enclosures = [')', ']', '}',
+                           '’', '”', '›', '>', '`', '"', '\'', '/']
+"""list of chars valid to be placed after Ethiopic sentence end `።` """
 
 
 def remove_non_ethiopic_helper(match: re.Match):
@@ -55,10 +67,9 @@ def remove_non_ethiopic_helper(match: re.Match):
     """
     # get matched char and if its not single raise Exception
     char = match.group()
-    if len(char) != 1:
-        raise ValueError(f"Multiple chars in match: '{char}'")
+    assert len(char) == 1, f"Multiple chars in match: '{char}'"
 
-    # if char is not either ethiopic or allowed return empty
+    # if char is neither ethiopic nor allowed, return empty
     if not (
         char in allowed_non_eth_chars or
         # ethiopic unicode except combining marks(not needed)
@@ -80,7 +91,7 @@ def remove_non_ethiopic(line: str):
 
 def line_is_all_punc(line: str):
     """
-    Returns True if line is empty or all chars in line are allowed
+    Returns True if line is empty, or all chars in line are allowed
     non Ethiopic chars or Ethiopic punctuations. To be used before
     writing cleaned text to output.
 
@@ -116,20 +127,17 @@ def remove_repetitive_punctuations(match: re.Match):
 def add_space_after_char(match: re.Match):
     """
     Adds a space after Ethiopic punctuation characters,
-    between `]` & `[`, and `)` & `(`.
+    and between `]` & `[`, and `)` & `(`. (b/n brackets for dicts)
     """
     before_space_chars = eth_puncs.union({']', ')'})
     # get matched chars
     chars = match.group()
-    if len(chars) != 2:
-        raise ValueError('Length of Match not Equal to Two!')
-    if chars[0] not in before_space_chars:
-        raise ValueError('Incorrect char at Start of Match!')
+    assert len(chars) == 2, 'Length of Match not Equal to Two!'
+    assert chars[0] in before_space_chars, 'Incorrect char at Start of Match!'
 
-    # TODO: for some eth punc chars like `።`, check if nxt char
-    # is closing bracket or quote and if so, don't add space
-    # if chars[0] == '።' and chars[1] in enclosure_end_list:
-    #     return chars
+    # is like closing bracket or quote and if so, don't add space
+    if chars[0] == '።' and chars[1] in sentense_end_enclosures:
+        return chars
 
     # add space & return
     return chars[0] + ' ' + chars[1]
@@ -143,10 +151,9 @@ def substitue_correct_punctuations(match: re.Match):
     punc_dict = {'፡፡': '።', '፡-': '፦', '፤-': '፤ '}
     # get matched chars
     chars = match.group()
-    if len(chars) != 2:
-        raise ValueError('Length of Match not Equal to Two!')
-    if chars not in punc_dict:
-        raise ValueError('Incorrect characters Matched!')
+    assert len(chars) == 2, 'Length of Match not Equal to Two!'
+    assert chars in punc_dict, 'Incorrect characters Matched!'
+
     return punc_dict[chars]
 
 
@@ -175,7 +182,7 @@ def remove_junk_helper(match: 're.Match[str]'):
 
     Enclosure is marked by start and end characters. `match` contains
     an optional char at start before enc but always contain one char
-    at the end making enc. end second to last.
+    at the end, making enc. end always second to last.
 
     NOTE:
         - To identify junk enclosure, make sure match has at least
@@ -190,7 +197,6 @@ def remove_junk_helper(match: 're.Match[str]'):
         char are not removed. This is so to avoid removing match b/n end and
         start, e.g.: "/ማየት/, / . ^/'/እዩት/" will be "/ማየት/ /እዩት/".
     """
-    # TODO: check if no content b/n enc. start & enc. end
     matched_junk = match.group()
     # start and end of matched junk
     j_start, j_end = matched_junk[0], matched_junk[-1]
@@ -232,7 +238,7 @@ def remove_junk_helper(match: 're.Match[str]'):
 def remove_junk_in_enclosures(line: str):
     """
     Removes unwanted characters found b/n enclosing chars like brackets and
-    quotes. Mostly they are result of removing non Ethiopic chars.
+    quotes. Mostly they are result of removing non Ethiopic chars previously.
     """
     # to make sure at least one char exist after end enclosure
     # see remove_junk_helper
@@ -266,13 +272,11 @@ def clean_line(line: str):
 
     Returns: list of words in the cleaned line.
     """
-    # TODO: add other junk enclosures like (.)
     # TODO: add other repetitive chars to remove (-=?)
-    # TODO: non semantic punctuations at start & end (+.-=,|) aftr space
     # TODO: space surrounded |, '([])' used in KBT,
     # TODO: specific puncs repeated excessively in big files and fiction books
-    # ... chars like <<, () [], in files like (DTW, KBT) & ones in books/misc
-    # ... year and dates limited to newspaper articles source time (1990-8)
+    # ...+ chars like <<, () [], in files like (DTW, KBT) & ones in books/misc,
+    # ...+ year and dates limited to newspaper articles source time (1990-8).
     # TODO: common articles repeated in d/t newspapers around same time
 
     # strip undesired chars from start & end of line
@@ -287,7 +291,7 @@ def clean_line(line: str):
 
     # match ethiopic punc chars not followed by space (except those before
     # closing brackets) and closing brackets directly followed by opening
-    # brackets `][`, `)(`. (The latter peculiar to some dicts. [Kidnae?])
+    # brackets `][`, `)(`. NOTE: The latter peculiar to some dicts. [Kidnae?])
     lack_space_ptrn = r'([፣፦፥፧፡፤፠።፨](?!\)|\])\S|\]\[|\)\()'
     # add space after first char in match
     line = re.sub(lack_space_ptrn, add_space_after_char, line)
@@ -298,12 +302,12 @@ def clean_line(line: str):
     line = re.sub(repeat_pattern, remove_repetitive_punctuations, line)
 
     # match 2 or more ethiopic chars followed by an open parenthesis and
-    # atleast other 3 characters. (Peculiar to Dictionaries)
+    # atleast other 3 characters. NOTE: (Peculiar to Dictionaries)
     no_space_bfr_paren = r'[\u1200-\u135a]{2,}\([^\)]{3,}'
     line = re.sub(no_space_bfr_paren, add_space_bfr_paren, line)
 
     # remove unwanted content (junk) enclosed by chars like brackets & quotes,
-    # which exist mostly because non Ethopic chars were removed previously
+    # NOTE: mostly because non Ethopic chars were removed previously
     line = remove_junk_in_enclosures(line)
 
     # TODO: CHECK IF LINE IS ALL PUNCTUATIONS HERE (including Ethiopic)
