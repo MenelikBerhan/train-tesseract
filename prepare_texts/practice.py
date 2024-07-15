@@ -4,44 +4,49 @@
 """
 Testing Ground for cleaning txt files
 """
+import json
+from math import floor
 import os
 import re
 from glob import iglob
+from pprint import pprint
 
 
-out_path = './test-strt-end-clean.txt'
+out_path = './test-combine_txt.txt'
 c = 0
-bad_line = 'ሰለ እዚህ ዜና ዋርካ ስር በአማርኛ ይወያዩ !'
+
+root = './cleaned_texts/'
 
 if __name__ == '__main__':
-    pathname = os.path.join('./cleaned_texts-JUNK_BAK/', '**', '*.txt')
-    prob_files: 'dict[str, list[tuple[int, str]]]' = {}
-    for file_path in iglob(pathname, recursive=True):
-        with open(file_path) as in_file:
-            l = 0
-            for line in in_file.readlines():
-                l += 1
-                if line.isspace() or line == '':
-                    continue
+    pass
+    # pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
+    # prob_files: 'dict[str, list[tuple[int, str]]]' = {}
+    # for file_path in iglob(pathname, recursive=True):
+    #     with open(file_path) as in_file:
+    #         l = 0
+    #         for line in in_file.readlines():
+    #             l += 1
+    #             if line.isspace() or line == '':
+    #                 continue
 
-                if re.search(r'(1997|1998)', line) != None:
-                    if file_path in prob_files:
-                        if len(prob_files[file_path]) > 3000:
-                            print(f"Break too Much in file: {file_path}")
-                            break
-                        prob_files[file_path].append((l, line))
-                    else:
-                        prob_files[file_path] = [(l, line)]
+    #             if re.search(r'(1997|1998)', line) != None:
+    #                 if file_path in prob_files:
+    #                     if len(prob_files[file_path]) > 3000:
+    #                         print(f"Break too Much in file: {file_path}")
+    #                         break
+    #                     prob_files[file_path].append((l, line))
+    #                 else:
+    #                     prob_files[file_path] = [(l, line)]
 
-    print(len(prob_files))
-    k = list(prob_files.keys())
-    k.sort(key=lambda x: len(prob_files[x]), reverse=True)
-    with open(out_path, 'w') as file:
-        for f in k:
-            to_write = f'{f} ({len(prob_files[f])} Lines)\n'
-            for line_info in prob_files[f]:
-                to_write += f'{line_info[0]}: "{line_info[1].strip()}"'
-            file.write(to_write + '\n')
+    # print(len(prob_files))
+    # k = list(prob_files.keys())
+    # k.sort(key=lambda x: len(prob_files[x]), reverse=True)
+    # with open(out_path, 'w') as file:
+    #     for f in k:
+    #         to_write = f'{f} ({len(prob_files[f])} Lines)\n'
+    #         for line_info in prob_files[f]:
+    #             to_write += f'{line_info[0]}: "{line_info[1].strip()}"'
+    #         file.write(to_write + '\n')
 
 
 """ d1 = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',
