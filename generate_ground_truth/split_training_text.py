@@ -82,6 +82,7 @@ lines = lines[:count]
 # input file name without extention
 input_file_name = pathlib.Path(training_text_file).stem
 
+# TODO: check if first loopin ove lines then fonts have difference
 for font in fonts:
     # remove space and comma from font name
     font_name = "-".join([w.strip(',') for w in font.split()])
