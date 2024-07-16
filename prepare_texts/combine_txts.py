@@ -18,6 +18,18 @@ input_sub_groups = {    # sub dirs in root dir (no / at start)
 
 ouput_file_path = './combined.txt'
 
+# add no chars per line to output file path
+ouput_file_path = Path(ouput_file_path)
+ouput_file_path = ouput_file_path.with_name(
+    ouput_file_path.stem +
+    f'_{LINE_LENGTH}_chars_line' + ouput_file_path.suffix
+)
+
+# make sure output file doesn't exist
+assert not ouput_file_path.exists(), \
+    f'Output file "{ouput_file_path}" already Exists!'
+
+# add all words in input files into one list
 all_words = []
 
 for sub_grp in input_sub_groups:
@@ -34,12 +46,6 @@ for sub_grp in input_sub_groups:
 shuffle(all_words)
 all_wrds_len = len(all_words)
 
-# add no chars per line to output file name
-output_file_path = Path(ouput_file_path)
-output_file_path = output_file_path.with_name(
-    output_file_path.stem +
-    f'_{LINE_LENGTH}_chars_line' + output_file_path.suffix
-)
 
 wrd_index = 0       # current word index in list
 with open(ouput_file_path, 'x') as output_file:
