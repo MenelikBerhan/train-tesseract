@@ -3,10 +3,12 @@
 Combines text files after shuffling words
 """
 import os
+
 from glob import iglob
 from random import shuffle
 
-LINE_LENGTH = 50        # no of chars in one line
+from constants import LINE_LENGTH
+
 input_root_dir = './cleaned_texts'
 input_sub_groups = {    # sub dirs in root dir (no / at start)
     'word_lists', 'dictionary_and_linguistic_books', 'articles',

@@ -4,11 +4,15 @@ Generate aggreagate information about Cleaned txt files
 """
 import json
 import os
+import pathlib
+
 from glob import iglob
 from statistics import mean
 
+from constants import LINE_LENGTH
+
 # output file to write info to
-info_ouput_file = './txt_files_info.txt'
+info_ouput_file = './cleaned_txt_files_info.txt'
 
 # root dir of cleaned txts (contains dirs only)
 cleaned_txts_root_dir = './cleaned_texts/'
@@ -16,9 +20,6 @@ cleaned_txts_root_dir = './cleaned_texts/'
 # names used as keys for info
 info_names = ['total_size', 'total_no_of_files', 'total_no_of_wrds',
               'total_len_of_wrds', 'avg_len_of_wrds', 'no_of_trimmed_lines']
-
-# max no of chars in one line (used to find no_of_trimmed_lines)
-LINE_LENGTH = 50
 
 # use list of dirs in root dir as groups of txts
 group_path = os.path.join(cleaned_txts_root_dir, '*', '')
@@ -80,11 +81,11 @@ for g, sg_dict in info_dict.items():
     sub_groups = sg_dict.keys()
     for info_name in info_names:
         if info_name == 'avg_len_of_wrds':
-            g_dict[info_name] = mean([sg_dict[sg][info_name]
-                                     for sg in sub_groups])
+            g_dict[info_name] = round(mean([sg_dict[sg][info_name]
+                                            for sg in sub_groups]), 3)
         else:
-            g_dict[info_name] = sum(
-                [sg_dict[sg][info_name] for sg in sub_groups])
+            g_dict[info_name] = round(sum(
+                [sg_dict[sg][info_name] for sg in sub_groups]), 3)
 
     group_summary_dict[g] = g_dict
 
@@ -94,12 +95,21 @@ summary_dict = {}
 """{'info_name': 'value'}"""
 for k in info_names:
     if info_name == 'avg_len_of_wrds':
-        summary_dict[k] = mean([g[k] for g in group_summary_dict.values()])
+        summary_dict[k] = round(
+            mean([g[k] for g in group_summary_dict.values()]), 3)
     else:
-        summary_dict[k] = sum([g[k] for g in group_summary_dict.values()])
+        summary_dict[k] = round(
+            sum([g[k] for g in group_summary_dict.values()]), 3)
+
+# add no chars per line to output file name
+output_file_path = pathlib.Path(info_ouput_file)
+output_file_path = output_file_path.with_name(
+    output_file_path.stem +
+    f'_{LINE_LENGTH}_chars_line' + output_file_path.suffix
+)
 
 # write to output file
-with open(info_ouput_file, 'w') as file:
+with open(output_file_path, 'w') as file:
     json.dump('ALL FILES SUMMARY', file)
     json.dump(summary_dict, file, indent=2)
     json.dump('GROUP SUMMARY', file)
