@@ -109,7 +109,7 @@ output_file_path = output_file_path.with_name(
 )
 
 # write to output file
-with open(output_file_path, 'xs') as file:
+with open(output_file_path, 'w') as file:
     json.dump('ALL FILES SUMMARY', file)
     json.dump(summary_dict, file, indent=2)
     json.dump('GROUP SUMMARY', file)
