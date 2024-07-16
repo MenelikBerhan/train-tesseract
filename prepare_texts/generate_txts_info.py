@@ -4,9 +4,9 @@ Generate aggreagate information about Cleaned txt files
 """
 import json
 import os
-import pathlib
 
 from glob import iglob
+from pathlib import Path
 from statistics import mean
 
 from constants import LINE_LENGTH
@@ -102,14 +102,14 @@ for k in info_names:
             sum([g[k] for g in group_summary_dict.values()]), 3)
 
 # add no chars per line to output file name
-output_file_path = pathlib.Path(info_ouput_file)
+output_file_path = Path(info_ouput_file)
 output_file_path = output_file_path.with_name(
     output_file_path.stem +
     f'_{LINE_LENGTH}_chars_line' + output_file_path.suffix
 )
 
 # write to output file
-with open(output_file_path, 'w') as file:
+with open(output_file_path, 'xs') as file:
     json.dump('ALL FILES SUMMARY', file)
     json.dump(summary_dict, file, indent=2)
     json.dump('GROUP SUMMARY', file)

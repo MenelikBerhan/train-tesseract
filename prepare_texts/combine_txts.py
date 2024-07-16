@@ -5,6 +5,7 @@ Combines text files after shuffling words
 import os
 
 from glob import iglob
+from pathlib import Path
 from random import shuffle
 
 from constants import LINE_LENGTH
@@ -32,6 +33,13 @@ for sub_grp in input_sub_groups:
 # random shuffle words
 shuffle(all_words)
 all_wrds_len = len(all_words)
+
+# add no chars per line to output file name
+output_file_path = Path(ouput_file_path)
+output_file_path = output_file_path.with_name(
+    output_file_path.stem +
+    f'_{LINE_LENGTH}_chars_line' + output_file_path.suffix
+)
 
 wrd_index = 0       # current word index in list
 with open(ouput_file_path, 'x') as output_file:
