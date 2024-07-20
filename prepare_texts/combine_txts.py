@@ -13,10 +13,10 @@ from constants import LINE_LENGTH
 input_root_dir = './cleaned_texts'
 input_sub_groups = {    # sub dirs in root dir (no / at start)
     'word_lists', 'dictionary_and_linguistic_books', 'articles',
-    'books/religious_amh/', 'books/religious_geez/'
+    'books/religious_amh/', 'books/religious_geez/', 'enh_corpus_by_year',
 }
 
-ouput_file_path = './combined.txt'
+ouput_file_path = './combined_w_corpus_80_l.txt'
 
 # add no chars per line to output file path
 ouput_file_path = Path(ouput_file_path)

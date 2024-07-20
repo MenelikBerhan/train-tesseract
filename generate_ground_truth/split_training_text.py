@@ -51,14 +51,19 @@ rand.shuffle(lines)
 # to list all available fonts: `fc-list : family style | sort`
 fonts = (
     # from okfonts of lstmdata/amh (except droid sans)
-    'Abyssinica SIL', 'FreeSerif',
-    'Noto Sans Ethiopic', 'Noto Sans Ethiopic Bold',
+    'Abyssinica SIL',
+	'FreeSerif', 'Noto Sans Ethiopic',
+    'Noto Sans Ethiopic Bold',
     # from washera fonts
-    'Ethiopia Jiret', 'Ethiopic WashRa Bold, Bold', 'Ethiopic Wookianos',
-    'Ethiopic Zelan', 'Ethiopic Tint',
+    'Ethiopia Jiret', 'Ethiopic WashRa Bold, Bold',
+    'Ethiopic Zelan',
     # from legally-free-geez-fonts-v1_0_0
     'A0 Addis Abeba Unicode', 'Ethiopic Dire Dawa',
 )
+"""
+Font problems:
+'Ethiopic Wookianos' and 'Ethiopic Tint', dont render('በፕራይቬታይዜሽን ')
+"""
 """
 # omitted fonts (don't support all Ethiopic chars [esp. geez no.s]
 # or allowed non-Ethiopic like brackets)
@@ -76,8 +81,8 @@ fonts = (
 'Shiromeda',    # similar to 'a0-aa-unicode' & chars like `<<`
 """
 # no of lines to process from txt file (comment out for all)
-count = 1000
-lines = lines[:count]
+# count = 1000
+# lines = lines[:count]
 
 # input file name without extention
 input_file_name = pathlib.Path(training_text_file).stem
@@ -110,9 +115,9 @@ for font in fonts:
             '--max_pages=1',
             '--strip_unrenderable_words',
             '--leading=32',      # Inter-line space (in pixels) default:12
-            '--xsize=3200',     # change xsize & ysize based on line length
+            '--xsize=3400',     # change xsize & ysize based on line length
             '--ysize=480',       # +  to minimize margin spaces around text
-            '--char_spacing=0.2',  # Inter-character space in ems def:0
+            '--char_spacing=0.1',  # Inter-character space in ems def:0
             '--exposure=0',
             '--unicharset_file=unicharset_files/Ethiopic.unicharset',
             # '--margin=0',
@@ -120,6 +125,8 @@ for font in fonts:
 
         line_count += 1
 
+    # if font == 'Abyssinica SIL':
+    #     break
         # subprocess.run([
         #     'text2image',
         #     '--max_pages=1',
