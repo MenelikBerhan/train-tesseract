@@ -14,7 +14,7 @@ from glob import iglob
 OVERWRITE_FILES = True
 training_text_file = 'combined_w_corpus_80_l_80_chars_line.txt'
 
-output_directory = './amh-old-ground-truth'
+output_directory = './amh-old-ground-truth-part-2'
 
 output_dir_path = pathlib.Path(output_directory)
 
@@ -31,11 +31,11 @@ else:
         print(f'Moved old files to: "{move_to}"')
     # else:
     #     # confirm overwrite
-    #    overwrite = input(
+    #     overwrite = input(
     #        f'About To OVERWRITE files in"{output_dir_path}"\nYes(Y) | No(N): ')
     #    if not overwrite in ['Yes', 'Y']:
     #        exit(1)
-    #    print(f'Overwriting files in "{output_dir_path}"')
+	#    print(f'Overwriting files in "{output_dir_path}"')
 
 lines = []
 
@@ -52,15 +52,14 @@ rand.shuffle(lines)
 fonts = (
     # from okfonts of lstmdata/amh (except droid sans)
     # 'Abyssinica SIL',
-	# 'FreeSerif',
-	'Noto Sans Ethiopic',
-    'Noto Sans Ethiopic Bold',
-    # from washera fonts
-    'Ethiopia Jiret',
+	# 'FreeSerif', 'Noto Sans Ethiopic',
+    # 'Noto Sans Ethiopic Bold',
+    # # from washera fonts
+    # 'Ethiopia Jiret',
     # 'Ethiopic WashRa Bold, Bold',
     # 'Ethiopic Zelan',
     # # from legally-free-geez-fonts-v1_0_0
-    # 'A0 Addis Abeba Unicode', 'Ethiopic Dire Dawa',
+    'A0 Addis Abeba Unicode', 'Ethiopic Dire Dawa',
 )
 """
 Font problems:
@@ -96,10 +95,11 @@ for font in fonts:
 
     # output files (box, text & image) base path for each font
     output_files_base_name = os.path.join(
-    output_directory, f'{input_file_name}_{font_name}')
-    if font == 'Noto Sans Ethiopic':
-        line_count = 194424
-        lines_custom = lines[194424:]
+        output_directory, f'{input_file_name}_{font_name}')
+
+    if font == 'A0 Addis Abeba Unicode':
+        line_count = 177267
+        lines_custom = lines[177267:]
     else:
         line_count = 0
         lines_custom = lines
