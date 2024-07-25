@@ -3,18 +3,33 @@
 Combines text files after shuffling words
 """
 import os
+
 from glob import iglob
+from pathlib import Path
 from random import shuffle
 
-LINE_LENGTH = 50        # no of chars in one line
+from constants import LINE_LENGTH
+
 input_root_dir = './cleaned_texts'
 input_sub_groups = {    # sub dirs in root dir (no / at start)
     'word_lists', 'dictionary_and_linguistic_books', 'articles',
-    'books/religious_amh/', 'books/religious_geez/'
+    'books/religious_amh/', 'books/religious_geez/', 'enh_corpus_by_year',
 }
 
-ouput_file_path = './combined.txt'
+ouput_file_path = './combined_w_corpus_80_l.txt'
 
+# add no chars per line to output file path
+ouput_file_path = Path(ouput_file_path)
+ouput_file_path = ouput_file_path.with_name(
+    ouput_file_path.stem +
+    f'_{LINE_LENGTH}_chars_line' + ouput_file_path.suffix
+)
+
+# make sure output file doesn't exist
+assert not ouput_file_path.exists(), \
+    f'Output file "{ouput_file_path}" already Exists!'
+
+# add all words in input files into one list
 all_words = []
 
 for sub_grp in input_sub_groups:
@@ -30,6 +45,7 @@ for sub_grp in input_sub_groups:
 # random shuffle words
 shuffle(all_words)
 all_wrds_len = len(all_words)
+
 
 wrd_index = 0       # current word index in list
 with open(ouput_file_path, 'x') as output_file:
