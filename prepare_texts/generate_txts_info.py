@@ -94,7 +94,7 @@ for g, sg_dict in info_dict.items():
 summary_dict = {}
 """{'info_name': 'value'}"""
 for k in info_names:
-    if info_name == 'avg_len_of_wrds':
+    if k == 'avg_len_of_wrds':
         summary_dict[k] = round(
             mean([g[k] for g in group_summary_dict.values()]), 3)
     else:
