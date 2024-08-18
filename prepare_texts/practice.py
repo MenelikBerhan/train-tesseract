@@ -5,11 +5,8 @@
 Testing Ground for cleaning txt files
 """
 import json
-from math import floor
 import os
-import re
 from glob import iglob
-from pprint import pprint
 
 non_eth_chars = {
     # minus, en & em dashes (rep: minus-hiphen(-))
@@ -68,8 +65,8 @@ eth_letters_avoid = {
     0x1315, 0x1318, 0x1319, 0x131A, 0x131B, 0x131C, 0x131D, 0x131E,
     0x131F, 0x1347, 0x1358, 0x1359, 0x135A}
 
-# 0x1366 (፦)
-eth_puncs_avoid = {0x135d, 0x135e, 0x135f, 0x1360, 0x1367, 0x1368}  # 3 comb marks & '፠', '፧', '፨'
+# 3 comb marks & '፠', '፧', '፨'0x1366 (፦)
+eth_puncs_avoid = {0x135d, 0x135e, 0x135f, 0x1360, 0x1367, 0x1368}
 # output file to write info to
 info_ouput_file = './txt_info_all.txt'
 
@@ -122,7 +119,8 @@ for group_dir in group_dirs:
                                 file_dict[c] = []
                             file_dict[c].append(w)
 
-            if file_dict == {}: continue
+            if file_dict == {}:
+                continue
             sub_group_dict[file_path] = file_dict
 
         group_dict[sub_group_dir] = sub_group_dict
@@ -149,6 +147,9 @@ out['enh_corpus'] = info_dict["./cleaned_texts/enh_corpus_by_year/"]
 
 with open('./selected_info_all.txt', 'w') as file:
     json.dump(out, file, indent=2, ensure_ascii=False)
+
+
+
 
 """ d1 = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',
       5: '፭', 6: '፮', 7: '፯', 8: '፰', 9: '፱'}
