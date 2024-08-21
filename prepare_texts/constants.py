@@ -267,6 +267,48 @@ lines_to_skip = {"ሰለ እዚህ ዜና ዋርካ ስር በአማርኛ ይ�
 # no. of chars in a line (used for combining cleaned txt files)
 LINE_LENGTH = 50
 
+# puncs from wrd before updating freqency
+puncs_to_strip_for_freq = {
+    "፠",
+    "፡",
+    "።",
+    "፣",
+    "፤",
+    "፥",
+    "፦",
+    "፧",
+    "፨",
+    "|",
+    "*",
+    "#",
+    "%",
+    "/",
+    "!",
+    "?",
+    "+",
+    "=",
+    "<",
+    ">",
+    "-",
+    ".",
+    ",",
+    ":",
+    ";",
+    '"',
+    "'",
+    "“",
+    "”",
+    "«",
+    "»",
+    "‹",
+    "›",
+    "(",
+    ")",
+    "[",
+    "]",
+}
+"""puncs to be stripped bfr updating word freq dict"""
+
 """no. of chars in a single line to be used for training"""
 
 """

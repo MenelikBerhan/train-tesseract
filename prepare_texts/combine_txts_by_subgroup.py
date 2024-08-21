@@ -8,7 +8,7 @@ import os
 import re
 from glob import iglob
 
-from constants import LINE_LENGTH
+from constants import LINE_LENGTH, puncs_to_strip_for_freq
 
 
 output_root_dir = "./combined_txts"
@@ -30,6 +30,47 @@ else:
     if response != "Y":
         exit(1)
 
+wrds_freq_dict: "dict[str, int]" = {}
+
+
+def filter_religious_amh(line_wrds: "list[str]"):
+    """Filters list of words by removing excessively repeated
+    sub_group specific words."""
+    # strip unwanted non-Ethiopic puncs from each word
+    wrds = [w.strip("()./-") for w in line_wrds]
+    filtered_wrds = []
+    # loop over each word
+    for w in wrds:
+
+        # avoid bible chapter quotes
+        if re.search(
+            r"[\u1369-\u137D]+[\u1200-\u135a\.]+|[\u1200-\u135a\.]+[\u1369-\u137D]+", w
+        ):
+            continue
+
+        # replace Ethiopic 100-199 representations (no 1 before 100)
+        w = re.sub(r"፩፻", "፻", w)
+
+        w_dict = w.strip("".join(puncs_to_strip_for_freq))
+
+        # freq for single chars
+        if len(w_dict) == 1:
+            wrds_freq_dict[w_dict] = wrds_freq_dict.get(w_dict, 0) + 4
+
+        # for ethiopic and arabic numbers
+        if all([c in range(0x1369, 0x137D) or c in range(0, 10) for c in w]):
+            wrds_freq_dict[w_dict] = wrds_freq_dict.get(w_dict, 0) + 4
+
+        else:
+            wrds_freq_dict[w_dict] = wrds_freq_dict.get(w_dict, 0) + 1
+
+        # if word is below freq threshold add to list
+        if wrds_freq_dict[w_dict] < 10:
+            filtered_wrds.append(w)
+
+    return filtered_wrds
+
+
 # combine texts by subgroup
 for sub_grp in input_sub_groups:
     sub_grp = sub_grp.strip("/")  # for path.join
@@ -50,7 +91,13 @@ for sub_grp in input_sub_groups:
                     r"^ከ[^0-9]{,20}[0-9]{1,2} ቀን [0-9]{4}$", line
                 ):
                     continue
-                sub_group_words.extend(line.split())
+                line_wrds = line.split()
+
+                # filter words for religiou amh subgroup
+                if "religious_amh" in sub_grp:
+                    line_wrds = filter_religious_amh(line_wrds)
+
+                sub_group_words.extend(line_wrds)
 
     sub_group_wrds_len = len(sub_group_words)
 

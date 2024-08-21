@@ -12,7 +12,7 @@ from glob import iglob
 # from pathlib import Path
 import random
 
-from constants import LINE_LENGTH
+from constants import LINE_LENGTH, puncs_to_strip_for_freq
 
 
 input_root_dir = "./cleaned_texts"
@@ -76,48 +76,7 @@ for sub_grp in input_sub_groups:
                     if re.search(r"^ካ[\u1369-\u137C0-9]+", w):
                         w = "ከ" + w[1:]
 
-                    # strip puncs from wrd before updating freqency
-                    puncs = {
-                        "፠",
-                        "፡",
-                        "።",
-                        "፣",
-                        "፤",
-                        "፥",
-                        "፦",
-                        "፧",
-                        "፨",
-                        "|",
-                        "*",
-                        "#",
-                        "%",
-                        "/",
-                        "!",
-                        "?",
-                        "+",
-                        "=",
-                        "<",
-                        ">",
-                        "-",
-                        ".",
-                        ",",
-                        ":",
-                        ";",
-                        '"',
-                        "'",
-                        "“",
-                        "”",
-                        "«",
-                        "»",
-                        "‹",
-                        "›",
-                        "(",
-                        ")",
-                        "[",
-                        "]",
-                    }
-
-                    w_dict = w.strip("".join(puncs))
+                    w_dict = w.strip("".join(puncs_to_strip_for_freq))
 
                     # for single char words, use max of 2 of each form (2*2<5)
                     if len(w_dict) == 1:
