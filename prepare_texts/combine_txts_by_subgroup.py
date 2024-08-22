@@ -30,7 +30,7 @@ else:
     if response != "Y":
         exit(1)
 
-wrds_freq_dict: "dict[str, int]" = {}
+wrds_freq_rel_amh_dict: "dict[str, int]" = {}
 
 
 def filter_religious_amh(line_wrds: "list[str]"):
@@ -55,17 +55,83 @@ def filter_religious_amh(line_wrds: "list[str]"):
 
         # freq for single chars
         if len(w_dict) == 1:
-            wrds_freq_dict[w_dict] = wrds_freq_dict.get(w_dict, 0) + 4
+            wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 4
 
         # for ethiopic and arabic numbers
-        if all([c in range(0x1369, 0x137D) or c in range(0, 10) for c in w]):
-            wrds_freq_dict[w_dict] = wrds_freq_dict.get(w_dict, 0) + 4
+        elif all([c in range(0x1369, 0x137D) or c in range(0, 10) for c in w]):
+            wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 4
 
         else:
-            wrds_freq_dict[w_dict] = wrds_freq_dict.get(w_dict, 0) + 1
+            wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 1
 
         # if word is below freq threshold add to list
-        if wrds_freq_dict[w_dict] < 10:
+        if wrds_freq_rel_amh_dict[w_dict] < 10:
+            filtered_wrds.append(w)
+
+    return filtered_wrds
+
+
+wrds_freq_enh_dict: "dict[str, int]" = {}
+
+
+def filter_enh_corpus(line_wrds: "list[str]"):
+    """Filters list of words by removing excessively repeated
+    sub_group specific words."""
+
+    filtered_wrds = []
+    # loop over each word
+    for w in line_wrds:
+
+        w_dict = w.strip("".join(puncs_to_strip_for_freq))
+
+        # for arabic numbers
+        if re.search(r"[0-9]", w_dict):
+            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 10
+
+        # freq for single chars
+        elif len(w_dict) == 1:
+            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 40
+
+        else:
+            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 1
+
+        # if word is below freq threshold add to list
+        if wrds_freq_enh_dict[w_dict] < 101:
+            filtered_wrds.append(w)
+
+    return filtered_wrds
+
+
+wrds_freq_articles: "dict[str, int]" = {}
+
+
+def filter_articles(line_wrds: "list[str]"):
+    """Filters list of words by removing excessively repeated
+    sub_group specific words."""
+
+    filtered_wrds = []
+    # loop over each word
+    for w in line_wrds:
+
+        # skip excessively repeated year tags
+        if re.search(r"1998|2002", w):
+            continue
+
+        w_dict = w.strip("".join(puncs_to_strip_for_freq))
+
+        # for arabic numbers
+        if re.search(r"[0-9]", w_dict):
+            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 10
+
+        # freq for single chars
+        elif len(w_dict) == 1:
+            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 40
+
+        else:
+            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 1
+
+        # if word is below freq threshold add to list
+        if wrds_freq_articles[w_dict] < 101:
             filtered_wrds.append(w)
 
     return filtered_wrds
@@ -91,11 +157,21 @@ for sub_grp in input_sub_groups:
                     r"^ከ[^0-9]{,20}[0-9]{1,2} ቀን [0-9]{4}$", line
                 ):
                     continue
+
+                # split line into list of words
                 line_wrds = line.split()
 
                 # filter words for religiou amh subgroup
                 if "religious_amh" in sub_grp:
                     line_wrds = filter_religious_amh(line_wrds)
+
+                # filter words for articles subgroup
+                if sub_grp == "articles":
+                    line_wrds = filter_articles(line_wrds)
+
+                # filter words for enh_corpus_by_year subgroup
+                if sub_grp == "enh_corpus_by_year":
+                    line_wrds = filter_enh_corpus(line_wrds)
 
                 sub_group_words.extend(line_wrds)
 
