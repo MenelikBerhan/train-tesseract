@@ -175,8 +175,6 @@ for sub_grp in input_sub_groups:
 
                 sub_group_words.extend(line_wrds)
 
-    sub_group_wrds_len = len(sub_group_words)
-
     # set output file path
     output_file_name = re.sub(r"\/", "_", sub_grp)
     output_file_path = os.path.join(output_root_dir, output_file_name)
