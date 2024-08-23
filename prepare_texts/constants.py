@@ -184,6 +184,8 @@ eth_letters_avoid = {
     0x1358,
     0x1359,
     0x135A,
+    0x135B, # doesn't exist
+    0x135C, # doesn't exist
 }
 """less frequent Ethiopic letters to be avoided"""
 
