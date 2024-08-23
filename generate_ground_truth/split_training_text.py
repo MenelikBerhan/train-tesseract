@@ -142,12 +142,12 @@ def skip_line_for_font(line: str, font: str) -> "bool":
             f in font
             for f in {"Fantuwua", "Jiret", "Tint", "WashRa SemiBold", "Wookianos"}
         ]
-    ) and re.search(r"[\u1268-\u1268]", line):
+    ) and re.search(r"[\u1268-\u126F]", line):
         return True
 
     # letter ጷ
     if any([f in font for f in {"Fantuwua", "Tint", "Wookianos"}]) and re.search(
-        r"[\u1268-\u1268]", line
+        r"\u133F", line
     ):
         return True
     return False
