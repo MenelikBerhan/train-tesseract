@@ -17,6 +17,12 @@ output_directory = "./amh-layer-ground-truth"
 
 output_dir_path = pathlib.Path(output_directory)
 
+# setup log directory
+log_dir = './log'
+log_dir_path = pathlib.Path(log_dir)
+if not log_dir_path.is_dir():
+    log_dir_path.mkdir()
+
 
 def setup_output_dir(OVERWRITE: bool, output_dir_path: pathlib.Path):
     """If output dir doesn't exist creates one. If it exists and has files
@@ -79,8 +85,9 @@ fonts = [
 ]
 
 # no of lines to process from txt file (comment out for all)
-# count = 3
-# lines = lines[:count]
+start_index = 0
+count = 100010
+lines = lines[start_index: start_index + count]
 
 
 # map of each font to its font name, with space replaced with `_` and
@@ -94,7 +101,6 @@ font_name_dict = {
     for font in fonts
 }
 
-
 def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
     """Parses text2image logs and writes normal output, skipped lines,
     stripped words and Exception errors to log files."""
@@ -103,8 +109,8 @@ def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
     if is_beginning:
         t = datetime.now().strftime("%b-%d-%H_%M_%S")
         for f in {"split_out", "skipped_err", "stripped_err", "split_err"}:
-            with open(f"./log/{f}", "w") as log_file:
-                log_file.write(f"------- {t} -------\n")
+            with open(f"./log/{f}", "a") as log_file:
+                log_file.write(f"\n------- {t} -------\n")
 
     # normal output
     if result.stderr:
@@ -147,7 +153,7 @@ def skip_line_for_font(line: str, font: str) -> "bool":
 
     # letter ጷ
     if any([f in font for f in {"Fantuwua", "Tint", "Wookianos"}]) and re.search(
-        r"\u133F", line
+        r"\u1337", line
     ):
         return True
     return False
@@ -156,7 +162,7 @@ def skip_line_for_font(line: str, font: str) -> "bool":
 # shuffle fonts to randomize font order
 rand.shuffle(fonts)
 # start line count from 1 for convinience
-line_count = 1
+line_count = start_index + 1
 
 # loop over lines and fonts
 for line in lines:
@@ -198,7 +204,7 @@ for line in lines:
         )
 
         # parse subprocess result logs & write to log files
-        is_begining = line_count == 1 and font == fonts[0]
+        is_begining = line_count == start_index + 1 and font == fonts[0]
         parse_txt2img_log(line_count, font_name, output_base, result, is_begining)
 
     line_count += 1
