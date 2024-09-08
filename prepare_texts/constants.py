@@ -290,7 +290,7 @@ lines_to_skip = {"ሰለ እዚህ ዜና ዋርካ ስር በአማርኛ ይ�
 """set of lines to be skipped, because of excessive repetition."""
 
 # no. of chars in a line (used for combining cleaned txt files)
-LINE_LENGTH = 50
+LINE_LENGTH = 60
 
 # puncs from wrd before updating freqency
 puncs_to_strip_for_freq = {

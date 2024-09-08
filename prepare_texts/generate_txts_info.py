@@ -31,6 +31,10 @@ info_names = [
 group_path = os.path.join(cleaned_txts_root_dir, "*", "")
 group_dirs = list(iglob(group_path, recursive=False))
 
+if len(group_dirs) == 0:
+    print(f'No files in given directory: {cleaned_txts_root_dir}')
+    exit(1)
+
 # dict to store info about each group and its sub groups
 info_dict: "dict[str, dict[str, dict[str, float|int]]]" = {}
 """{'group_path': {sub_group_path: {'info_name': 'value'}}}"""
