@@ -2,14 +2,16 @@
 # runs lstmeval on batch of best chekpoint|traineddata files
 # and generate lstmeval.tsv for plot.cer.py
 
+# NO Forward slash at END for Directories
 TRIAL=6
 CHECKPOINTS_DIR="checkpoints"
 STARTER_TRAINED_DATA="6/amh-layer.traineddata"
-TRAINEDDATA_DIR="6/checkpoint_traineddatas"
+#TRAINEDDATA_DIR="6/checkpoint_traineddatas"
+TRAINEDDATA_DIR="."
 LSTMF_FILES_DIR="eval_files/lstmeval_files_6"
 EVAL_CER_DIR="6/cer_eval"
 FROM_CHKPNT="0"
-FROM_TRAINED_DATA="0"
+FROM_TRAINED_DATA="1"
 GENERATE_EVAL_TSV="1"
 
 # create traineddata from checkpoints

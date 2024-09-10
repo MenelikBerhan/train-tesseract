@@ -25,7 +25,7 @@ else
 			--model_output "../data/amh-layer/checkpoints/amh-layer" \
 			--train_listfile "../data/amh-layer/list.train" \
 			--eval_listfile "../data/amh-layer/list.eval" \
-			--max_iterations -1 \
+			--max_iterations -2 \
 			--target_error_rate 0.01 \
 			--net_spec '[Lfx256 O1c336]' \
 			--append_index 5 \
