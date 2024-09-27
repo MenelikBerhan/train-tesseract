@@ -58,7 +58,7 @@ egrep "BCER eval" "$LOG" | egrep -o "[0-9\.]+At iteration.*" | \
 echo -e 'LearningIteration\tTrainingIteration\tEvalCER' > eval_"$TRIAL".tsv
 liter=$(egrep "^[0-9]+" -o eval_temp.tsv)
 for l in $liter ; do cer=$(egrep "^"$l eval_temp.tsv | awk '{print $NF}') ; \
-	iter=$(egrep -o "^"$l".[0-9]+" iteration_"$TRIAL".tsv) ; \
+	iter=$(egrep -o "^"$l".[0-9]+" iteration_"$TRIAL".tsv | tail -1) ; \
 	echo -e "$iter\t$cer" ; done >> eval_"$TRIAL".tsv
 
 rm eval_temp.tsv

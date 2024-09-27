@@ -19,16 +19,14 @@ else
 		source ../.venv/bin/activate && \
 		lstmtraining \
 			--debug_interval 0 \
-			--traineddata "../data/amh-layer/amh-layer.traineddata" \
-			--continue_from "../data/amh/amh-layer.lstm" \
-			--model_output "../data/amh-layer/checkpoints/amh-layer" \
-			--train_listfile "../data/amh-layer/list.train" \
-			--eval_listfile "../data/amh-layer/list.eval" \
-			--learning_rate 0.001 \
+			--traineddata "../data/amh-scratch/amh-scratch.traineddata" \
+			--model_output "../data/amh-scratch/checkpoints/amh-scratch" \
+			--train_listfile "../data/amh-scratch/list.train" \
+			--eval_listfile "../data/amh-scratch/list.eval" \
+			--learning_rate 0.002 \
 			--target_error_rate 0.01 \
-			--net_spec '[Lfys64 Lfx96 Lrx96 Lfx256 O1c335]' \
-			--append_index 2 \
-			--max_iterations -2 >> ../out_lstmtrain_chron_8 2>&1
+			--net_spec '[1,48,0,1 Ct3,3,16 Mp3,3 Lfys64 Lfx96 Lrx96 Lfx512 O1c335]' \
+			--max_iterations -2 >> ../out_lstmtrain_chron_1 2>&1
 	fi
 fi
 
