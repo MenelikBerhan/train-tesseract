@@ -15,6 +15,9 @@ else
 	if [ "$?" == 0 ] ; then
 		echo "$(date) : Killed by OOM: $killed_info"
 
+		cp ~/train-tesseract/data/amh-layer/checkpoints/amh-layer_checkpoint \
+			~/train-tesseract/bak/amh-layer_checkpoint-"$(date | tr ' ' '_')"
+
 		cd /home/menelikberhan/train-tesseract/tesstrain && \
 		source ../.venv/bin/activate && \
 		lstmtraining \
