@@ -15,6 +15,7 @@ else
 	if [ "$?" == 0 ] ; then
 		echo "$(date) : Killed by OOM: $killed_info"
 
+		# copy last checkpoint as a backup
 		cp ~/train-tesseract/data/amh-layer/checkpoints/amh-layer_checkpoint \
 			~/train-tesseract/bak/amh-layer_checkpoint-"$(date | tr ' ' '_')"
 
@@ -29,9 +30,9 @@ else
 			--eval_listfile "../data/amh-layer/list.eval" \
 			--learning_rate 0.001 \
 			--target_error_rate 0.01 \
-			--net_spec '[Lfys64 Lfx96 Lrx96 Lfx256 O1c335]' \
-			--append_index 2 \
-			--max_iterations -2 >> ../out_lstmtrain_chron_8 2>&1
+			--net_spec '[Lfx256 O1c335]' \
+			--append_index 5 \
+			--max_iterations -4 >> ../out_lstmtrain_chron_10 2>&1
 	fi
 fi
 
