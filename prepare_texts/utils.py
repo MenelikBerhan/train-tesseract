@@ -42,7 +42,6 @@ def replace_non_frequent_eth(match: re.Match):
     Replaces non requent Ethiopic char with a substitute (frequent) char.
     """
     replace_dict = {
-        "ቍ": "ቁ",
         "ጕ": "ጉ",
         "ኵ": "ኩ",
         "ዅ": "ኹ",
@@ -96,7 +95,7 @@ def clean_non_frequent(line: str):
     line = re.sub(r"[\−\–\—]", "-", line)
 
     # replace non frequent ethiopic chars with related forms
-    line = re.sub(r"[ቍጕኵዅኍ፧፠፨]", replace_non_frequent_eth, line)
+    line = re.sub(r"[ጕኵዅኍ፧፠፨]", replace_non_frequent_eth, line)
 
     # remove words that conotain non frequent chars to avoid
     line = re.sub(r"\S+", remove_word_with_unwanted_chars, line)
