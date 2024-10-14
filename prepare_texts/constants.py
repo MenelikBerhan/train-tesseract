@@ -114,7 +114,7 @@ eth_letters_avoid = {
     0x1249, # reserved
     0x124A,
     0x124C,
-    0x124D,
+    # 0x124D, # 'ቍ'
     0x124E, # reserved
     0x124F, # reserved
     0x1250,
