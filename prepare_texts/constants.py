@@ -12,7 +12,7 @@ allowed_non_eth_chars = {
     # general uses (rep: as is)
     "|",
     "*",
-    "#",
+    # "#",
     "%",
     "/",
     "!",
@@ -25,7 +25,7 @@ allowed_non_eth_chars = {
     ".",
     ",",
     ":",
-    ";",
+    # ";",
     # arabic nums (rep: as is)
     "0",
     "1",
@@ -111,12 +111,12 @@ eth_nums = {
 eth_letters_avoid = {
     0x1207,
     0x1247,
-    0x1249, # reserved
+    0x1249,  # reserved
     0x124A,
     0x124C,
     # 0x124D, # 'ቍ'
-    0x124E, # reserved
-    0x124F, # reserved
+    0x124E,  # reserved
+    0x124F,  # reserved
     0x1250,
     0x1251,
     0x1252,
@@ -124,38 +124,38 @@ eth_letters_avoid = {
     0x1254,
     0x1255,
     0x1256,
-    0x1257, # reserved
+    0x1257,  # reserved
     0x1258,
-    0x1259, # reserved
+    0x1259,  # reserved
     0x125A,
     0x125B,
     0x125C,
     0x125D,
-    0x125E, # reserved
-    0x125F, # reserved
+    0x125E,  # reserved
+    0x125F,  # reserved
     0x1287,
-    0x1289, # reserved
+    0x1289,  # reserved
     0x128A,
     0x128C,
     0x128D,
-    0x128E, # reserved
-    0x128F, # reserved
+    0x128E,  # reserved
+    0x128F,  # reserved
     0x12AF,
-    0x12B1, # reserved
+    0x12B1,  # reserved
     0x12B2,
     0x12B4,
     0x12B5,
-    0x12B6, # reserved
-    0x12B7, # reserved
-    0x12BF, # reserved
-    0x12C1, # reserved
+    0x12B6,  # reserved
+    0x12B7,  # reserved
+    0x12BF,  # reserved
+    0x12C1,  # reserved
     0x12C2,
     0x12C4,
     0x12C5,
-    0x12C6, # reserved
-    0x12C7, # reserved
+    0x12C6,  # reserved
+    0x12C7,  # reserved
     0x12CF,
-    0x12D7, # reserved
+    0x12D7,  # reserved
     0x12EF,
     0x12F8,
     0x12F9,
@@ -166,12 +166,12 @@ eth_letters_avoid = {
     0x12FE,
     0x12FF,
     0x130F,
-    0x1311, # reserved
+    0x1311,  # reserved
     0x1312,
     0x1314,
     0x1315,
-    0x1316, # reserved
-    0x1317, # reserved
+    0x1316,  # reserved
+    0x1317,  # reserved
     0x1318,
     0x1319,
     0x131A,
@@ -185,8 +185,8 @@ eth_letters_avoid = {
     0x1358,
     0x1359,
     0x135A,
-    0x135B, # doesn't exist
-    0x135C, # doesn't exist
+    0x135B,  # doesn't exist
+    0x135C,  # doesn't exist
 }
 """less frequent Ethiopic letters to be avoided"""
 
@@ -290,7 +290,7 @@ lines_to_skip = {"ሰለ እዚህ ዜና ዋርካ ስር በአማርኛ ይ�
 """set of lines to be skipped, because of excessive repetition."""
 
 # no. of chars in a line (used for combining cleaned txt files)
-LINE_LENGTH = 60
+LINE_LENGTH = 75
 
 # puncs from wrd before updating freqency
 puncs_to_strip_for_freq = {
