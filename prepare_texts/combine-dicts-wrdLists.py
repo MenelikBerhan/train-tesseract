@@ -14,6 +14,7 @@ import random
 
 from constants import LINE_LENGTH, puncs_to_strip_for_freq
 
+OVERWRITE = True
 
 input_root_dir = "./cleaned_texts"
 output_root_dir = "./combined_txts"
@@ -32,6 +33,15 @@ if not os.path.isdir(output_root_dir):
 else:
     # ask for confirmation
     response = input(f"Output dir {output_root_dir} exist. Continue? Y/N: ")
+    if response != "Y":
+        exit(1)
+
+# set output file path
+output_file_path = os.path.join(output_root_dir, output_file_name)
+
+# check if output file already exists
+if not OVERWRITE and os.path.exists(output_file_path):
+    response = input(f"File {output_file_path} Exists. Overwrite? Y/N: ")
     if response != "Y":
         exit(1)
 
@@ -59,8 +69,8 @@ for sub_grp in input_sub_groups:
                         w = w.replace("-", "")
 
                     # skip repetitive bible quotes used in dictionaries
-                    if re.search(r"[\u1200-\u1368]{2,3}[\u1369-\u137c]{1,2}", w):
-                        continue
+                    # if re.search(r"[\u1200-\u1368]{2,3}[\u1369-\u137c]{1,2}", w):
+                    #     continue
 
                     # skip words with puncs that makes words unusable
                     if re.search(r"[\.\(\)\-\[\]]", w):
@@ -86,12 +96,12 @@ for sub_grp in input_sub_groups:
                     elif re.search(r"[\u1200-\u135a]+/[\u1200-\u135a]+", w_dict):
                         all_wrds_dict[w_dict] = all_wrds_dict.get(w_dict, 0) + 4
 
-                    # for Ethiopic no.s with letter prefix & suffix, store one of each form
-                    elif re.search(
-                        r"^(ለ|ክ|በ|የ)?[\u1369-\u137C0-9]+(ኛ|ው|ት|ቱ|ና|ም|ሩ|ኝ|ኙ|ድ|ዱ)*",
-                        w_dict,
-                    ):
-                        all_wrds_dict[w_dict] = all_wrds_dict.get(w_dict, 0) + 4
+                    # for Ethiopic no.s with letter prefix & suffix, store two of each form
+                    # elif re.search(
+                    #     r"^(ለ|ክ|በ|የ)?[\u1369-\u137C0-9]+(ኛ|ው|ት|ቱ|ና|ም|ሩ|ኝ|ኙ|ድ|ዱ)*",
+                    #     w_dict,
+                    # ):
+                    #     all_wrds_dict[w_dict] = all_wrds_dict.get(w_dict, 0) + 2
 
                     # for the rest store at most 4 of each form (4*1<5)
                     else:
@@ -103,15 +113,6 @@ for sub_grp in input_sub_groups:
 
 # shuffle words
 random.Random(23).shuffle(all_wrds)
-
-# set output file path
-output_file_path = os.path.join(output_root_dir, output_file_name)
-
-# check if output file already exists
-if os.path.exists(output_file_path):
-    response = input(f"File {output_file_path} Exists. Overwrite? Y/N: ")
-    if response != "Y":
-        exit(1)
 
 all_wrds_len = len(all_wrds)
 wrd_index = 0  # current word index in list

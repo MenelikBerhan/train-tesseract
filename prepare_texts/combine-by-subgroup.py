@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Combines text files by sub groups. After wrapping lines to LINE_LENGTH
-shuffles lines before writing to output file for the subgroup.
+Combines text files by sub groups. After filtering words using a treshold
+frequency, shuffles and writes a maximum LINE_LENGTH lines to output file
+for each subgroup.
 """
 
 import os
+import random
 import re
 from glob import iglob
 
@@ -13,6 +15,8 @@ from constants import LINE_LENGTH, puncs_to_strip_for_freq
 
 output_root_dir = "./combined_txts"
 input_root_dir = "./cleaned_texts"
+
+OVERWRITE = True
 
 # dirs in input root dir
 input_sub_groups = {
@@ -43,12 +47,12 @@ def filter_religious_amh(line_wrds: "list[str]"):
     for w in wrds:
 
         # avoid bible chapter quotes
-        if re.search(
-            r"[\u1369-\u137D]+[\u1200-\u135a\.]+|[\u1200-\u135a\.]+[\u1369-\u137D]+", w
-        ):
-            continue
+        # if re.search(
+        #     r"[\u1369-\u137D]+[\u1200-\u135a\.]+|[\u1200-\u135a\.]+[\u1369-\u137D]+", w
+        # ):
+        #     continue
 
-        # replace Ethiopic 100-199 representations (no 1 before 100)
+        # replace Ethiopic 100-199 representations (do not use ፩ before ፻)
         w = re.sub(r"፩፻", "፻", w)
 
         w_dict = w.strip("".join(puncs_to_strip_for_freq))
@@ -57,9 +61,13 @@ def filter_religious_amh(line_wrds: "list[str]"):
         if len(w_dict) == 1:
             wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 4
 
-        # for ethiopic and arabic numbers
-        elif all([c in range(0x1369, 0x137D) or c in range(0, 10) for c in w]):
+        # for arabic numbers
+        elif all([c in range(0, 10) for c in w]):
             wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 4
+
+        # for ethiopic numbers
+        # elif all([c in range(0x1369, 0x137D) for c in w]):
+        #     wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 4
 
         else:
             wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 1
@@ -144,7 +152,17 @@ for sub_grp in input_sub_groups:
     # to match all txt file in sub group
     pathname = os.path.join(input_root_dir, sub_grp, "**", "*.txt")
 
-    # collect all words for each sub group in a list (w/o shuffling)
+    # set output file path
+    output_file_name = re.sub(r"\/", "_", sub_grp)
+    output_file_path = os.path.join(output_root_dir, output_file_name)
+
+    # check if output file already exists
+    if not OVERWRITE and os.path.exists(output_file_path):
+        response = input(f"File {output_file_path} Exists. Overwrite? Y/N: ")
+        if response != "Y":
+            exit(1)
+
+    # collect all words for each sub group in a list
     sub_group_words: "list[str]" = []
     for txt_file_path in iglob(pathname, recursive=True):
         with open(txt_file_path) as txt_file:
@@ -175,15 +193,8 @@ for sub_grp in input_sub_groups:
 
                 sub_group_words.extend(line_wrds)
 
-    # set output file path
-    output_file_name = re.sub(r"\/", "_", sub_grp)
-    output_file_path = os.path.join(output_root_dir, output_file_name)
-
-    # check if output file already exists
-    if os.path.exists(output_file_path):
-        response = input(f"File {output_file_path} Exists. Overwrite? Y/N: ")
-        if response != "Y":
-            exit(1)
+    # shuffle words
+    random.Random(23).shuffle(sub_group_words)
 
     sub_group_wrds_len = len(sub_group_words)
     wrd_index = 0  # current word index in list
