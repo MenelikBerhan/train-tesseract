@@ -7,8 +7,9 @@ import os
 import random
 from glob import iglob
 
-from constants import LINE_LENGTH
+from constants import LINE_LENGTH, eth_unicode_range_letters
 
+OVERWRITE = True
 
 output_root_dir = "."
 output_file_name = "amh-layer.training_txt"
@@ -30,12 +31,12 @@ else:
 output_file_path = os.path.join(output_root_dir, output_file_name)
 
 # check if output file already exists
-if os.path.exists(output_file_path):
+if not OVERWRITE and os.path.exists(output_file_path):
     response = input(f"File {output_file_path} Exists. Overwrite? Y/N: ")
     if response != "Y":
         exit(1)
 
-all_wrds = []
+all_wrds: "list[str]" = []
 # to match all files in input dir
 pathname = os.path.join(input_root_dir, "*")
 
@@ -55,6 +56,52 @@ for txt_file_path in iglob(pathname):
 
             all_wrds.extend(line.split())
 
+# add some chars as single words
+add_chrs_dict = {
+    "*": 200,
+    "+": 230,
+    "<": 200,
+    ">": 200,
+    "=": 300,
+    "|": 200,
+    "ሗ": 30,
+    "ጷ": 100,
+    "ጱ": 50,
+    "ዧ": 100,
+    "ኧ": 100,
+    "ቯ": 100,
+    "ቩ": 100,
+    "ሧ": 100,
+    "ሗ": 100,
+}
+for ch in add_chrs_dict:
+    all_wrds.extend([ch] * add_chrs_dict[ch])
+
+# add single quote pairs to single random words
+single_quotes_dict = {"‹›": 400, "''": 300}
+for q, k in single_quotes_dict.items():
+    to_add_indicies = random.Random().sample(range(0, len(all_wrds)), k)
+    for i in to_add_indicies:
+        w = all_wrds[i]
+        if all([ord(c) in eth_unicode_range_letters for c in w]):
+            all_wrds[i] = q[0] + w + q[1]
+
+# add start and end quotes to d/t random words
+strt_quotes_dict = {"“": 600, "[": 400, "'": 200}
+for q, k in strt_quotes_dict.items():
+    to_add_indicies = random.Random().sample(range(0, len(all_wrds)), k)
+    for i in to_add_indicies:
+        w = all_wrds[i]
+        if all([ord(c) in eth_unicode_range_letters for c in w]):
+            all_wrds[i] = q + w
+
+end_quotes_dict = {"”": 600, "]": 400, "'": 200}
+for q, k in end_quotes_dict.items():
+    to_add_indicies = random.Random().sample(range(0, len(all_wrds)), k)
+    for i in to_add_indicies:
+        w = all_wrds[i]
+        if all([ord(c) in eth_unicode_range_letters for c in w]):
+            all_wrds[i] = w + q
 
 # shuffle words
 random.Random(23).shuffle(all_wrds)

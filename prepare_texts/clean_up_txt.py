@@ -10,7 +10,7 @@ from glob import iglob
 
 from utils import clean_line, clean_non_frequent, line_is_all_punc
 
-input_root_dir = "../training_texts/"
+input_root_dir = "./training_texts/"
 output_root_dir = "./cleaned_texts"
 overwrite_output_file = True
 
