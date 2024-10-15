@@ -18,7 +18,7 @@ output_directory = "./amh-layer-ground-truth"
 output_dir_path = pathlib.Path(output_directory)
 
 # setup log directory
-log_dir = './log'
+log_dir = "./log"
 log_dir_path = pathlib.Path(log_dir)
 if not log_dir_path.is_dir():
     log_dir_path.mkdir()
@@ -74,20 +74,22 @@ fonts = [
     "FreeSerif",
     "Noto Sans Ethiopic",
     "Noto Sans Ethiopic Bold",
+    "Droid Sans Ethiopic",
+    "Droid Sans Ethiopic Bold",
     # from washera fonts
-    "Ethiopia Jiret",
-    "Ethiopic WashRa Bold, Bold",  # very similar to Abyssinica SIL
-    "Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
-    "Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
-    "Ethiopic Fantuwua",  # confusing አ - ኦ
-    # # from legally-free-geez-fonts-v1_0_0
-    "A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
+    # "Ethiopia Jiret",
+    # "Ethiopic WashRa Bold, Bold",  # very similar to Abyssinica SIL
+    # "Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
+    # "Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
+    # "Ethiopic Fantuwua",  # confusing አ - ኦ
+    # # # from legally-free-geez-fonts-v1_0_0
+    # "A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
 ]
 
 # no of lines to process from txt file (comment out for all)
-start_index = 0
-count = 100010
-lines = lines[start_index: start_index + count]
+start_index = 14990
+count = 30
+lines = lines[start_index : start_index + count]
 
 
 # map of each font to its font name, with space replaced with `_` and
@@ -100,6 +102,7 @@ font_name_dict = {
     .replace("Abyssinica", "Abys")
     for font in fonts
 }
+
 
 def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
     """Parses text2image logs and writes normal output, skipped lines,
@@ -156,6 +159,12 @@ def skip_line_for_font(line: str, font: str) -> "bool":
         r"\u1337", line
     ):
         return True
+
+    # allowed non-eth chars
+    if "Droid" in font and re.search(
+        r"[\|\*\%\/\!\?\+\=\<\>\-\.\,\:0-9\"\'\“\”\«\»\‹\›\(\)\[\]]", line
+    ):
+        return True
     return False
 
 
@@ -194,10 +203,10 @@ for line in lines:
                 "--strip_unrenderable_words",
                 "--leading=0",  # Inter-line space (in pixels) default:12
                 "--margin=10",
-                "--xsize=1800",  # change xsize & ysize based on line length
-                "--ysize=120",  # +  to minimize margin spaces around text
+                "--xsize=3000",  # change xsize & ysize based on line length
+                "--ysize=100",  # +  to minimize margin spaces around text
                 "--unicharset_file=unicharset_files/Ethiopic.unicharset",
-                "--exposure=-1",
+                "--char_spacing=0.3",  # Inter-character space in ems def:0
             ],
             encoding="utf8",  # to force str format for result attributes
             capture_output=True,  # to capture stdout & stderr
