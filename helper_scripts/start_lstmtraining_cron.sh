@@ -32,7 +32,7 @@ else
 			--target_error_rate 0.01 \
 			--net_spec '[Lfx256 O1c335]' \
 			--append_index 5 \
-			--max_iterations -4 >> ../out_lstmtrain_chron_10 2>&1
+			--max_iterations -4 >> ../out_lstmtrain_chron_12 2>&1
 	fi
 fi
 
