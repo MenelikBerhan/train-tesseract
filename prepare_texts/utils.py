@@ -12,6 +12,8 @@ from constants import (
     enclosure_start_list,
     eth_avoid,
     eth_puncs,
+    eth_nums as eth_nums_dict,
+    eth_digits as eth_digits_dict,
     eth_unicode_range_all,
     eth_unicode_range_marks,
     junk_content_ptrn,
@@ -477,3 +479,36 @@ def clean_line(line: str):
     cleaned_line_wrds = line.split()
 
     return cleaned_line_wrds
+
+
+def convert_to_eth_num(n: int):
+    """Converts [0-100000000) arabic no. integers into Ethiopic number string."""
+    if n >= 100000000:
+        raise ValueError("Number must be b/n 0 & 99,999,999 inclusive")
+    if 0 <= n < 10:
+        return eth_digits_dict[n]
+    if 10 <= n < 100:
+        return eth_nums_dict[n // 10] + eth_digits_dict[n % 10]
+    if 100 <= n < 1000:
+        return (
+            (eth_digits_dict[n // 100] if n >= 200 else "")
+            + "፻"
+            + eth_nums_dict[n % 100 // 10]
+            + eth_digits_dict[n % 10]
+        )
+    if 1000 <= n < 10000:
+        return (
+            eth_nums_dict[n // 100 // 10]
+            + eth_digits_dict[n // 100 % 10]
+            + "፻"
+            + eth_nums_dict[n % 100 // 10]
+            + eth_digits_dict[n % 10]
+        )
+    if 10000 <= n < 100000000:
+        ten_thousands = n // 10000
+        rem = n % 10000
+        return (
+            (convert_to_eth_num(ten_thousands) if ten_thousands > 1 else "")
+            + "፼"
+            + convert_to_eth_num(rem)
+        )
