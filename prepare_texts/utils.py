@@ -477,22 +477,3 @@ def clean_line(line: str):
     cleaned_line_wrds = line.split()
 
     return cleaned_line_wrds
-
-
-# def convert_num(match: re.Match):
-#     num = match.group()
-#     if num == '0' or len(num) > 3:
-#         return num
-#     num = int(num)
-
-#     h, t, o = num // 100, (num % 100) // 10, (num % 100) % 10
-#     geez_num = eth_digits[h] + \
-#         '፻' if h else '' + eth_nums[t] + eth_digits[o]
-#     return geez_num
-
-
-# def change_num(wrd: str):
-#     if wrd == '_' * 14:
-#         return ''
-
-#     return re.sub(r'[\d]+', convert_num, wrd)
