@@ -94,17 +94,17 @@ def filter_enh_corpus(line_wrds: "list[str]"):
 
         # for arabic numbers
         if re.search(r"[0-9]", w_dict):
-            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 10
+            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 4
 
         # freq for single chars
         elif len(w_dict) == 1:
-            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 40
+            wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 15
 
         else:
             wrds_freq_enh_dict[w_dict] = wrds_freq_enh_dict.get(w_dict, 0) + 1
 
         # if word is below freq threshold add to list
-        if wrds_freq_enh_dict[w_dict] < 101:
+        if wrds_freq_enh_dict[w_dict] < 31:
             filtered_wrds.append(w)
 
     return filtered_wrds
@@ -129,17 +129,17 @@ def filter_articles(line_wrds: "list[str]"):
 
         # for arabic numbers
         if re.search(r"[0-9]", w_dict):
-            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 10
+            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 5
 
         # freq for single chars
         elif len(w_dict) == 1:
-            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 40
+            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 20
 
         else:
             wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 1
 
         # if word is below freq threshold add to list
-        if wrds_freq_articles[w_dict] < 101:
+        if wrds_freq_articles[w_dict] < 51:
             filtered_wrds.append(w)
 
     return filtered_wrds
