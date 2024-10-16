@@ -8,6 +8,7 @@ import random
 from glob import iglob
 
 from constants import LINE_LENGTH, eth_unicode_range_letters
+from utils import convert_to_eth_num
 
 OVERWRITE = True
 
@@ -76,6 +77,51 @@ add_chrs_dict = {
 }
 for ch in add_chrs_dict:
     all_wrds.extend([ch] * add_chrs_dict[ch])
+
+# add Ethiopic no.s as single words
+# add ቊ before random 30 no.s
+to_add_indicies = random.Random().sample(range(30, 100), 30)
+for n in range(30, 100):
+    eth_num = convert_to_eth_num(n)
+    if n >= 40:
+        if n in to_add_indicies:
+            all_wrds.extend([eth_num, "ቊ" + eth_num])
+        else:
+            all_wrds.extend([eth_num] * 2)
+    else:
+        if n in to_add_indicies:
+            eth_num = "ቊ" + eth_num
+        all_wrds.extend([eth_num])
+
+# to add ቊ before some no.s
+# add ቊ before random 100 no.s
+to_add_indicies = random.Random().sample(range(100, 350), 75)
+to_add_indicies.extend(random.Random().sample(range(350, 1000), 25))
+for n in range(100, 1000):
+    eth_num = convert_to_eth_num(n)
+    if n % 100 >= 40:
+        if n in to_add_indicies:
+            all_wrds.extend([eth_num, "ቊ" + eth_num])
+        else:
+            all_wrds.extend([eth_num] * 2)
+    else:
+        if n in to_add_indicies:
+            eth_num = "ቊ" + eth_num
+        all_wrds.extend([eth_num])
+
+for n in range(1000, 10000):
+    eth_num = convert_to_eth_num(n)
+    if n % 100 >= 40:
+        all_wrds.extend([eth_num] * 2)
+    else:
+        all_wrds.extend([eth_num])
+
+# to add 500 '፼'
+nums = random.Random().sample(range(10000, 1000000), 400)
+nums.extend(random.Random().sample(range(1000000, 100000000), 100))
+for n in nums:
+    all_wrds.extend([convert_to_eth_num(n)])
+
 
 # add single quote pairs to single random words
 single_quotes_dict = {"‹›": 400, "''": 300}
