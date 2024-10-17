@@ -77,17 +77,17 @@ fonts = [
     "Droid Sans Ethiopic",
     "Droid Sans Ethiopic Bold",
     # from washera fonts
-    # "Ethiopia Jiret",
+    "Ethiopia Jiret",
     # "Ethiopic WashRa Bold, Bold",  # very similar to Abyssinica SIL
-    # "Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
-    # "Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
+    "Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
+    "Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
     # "Ethiopic Fantuwua",  # confusing አ - ኦ
-    # # # from legally-free-geez-fonts-v1_0_0
-    # "A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
+    # from legally-free-geez-fonts-v1_0_0
+    "A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
 ]
 
 # no of lines to process from txt file (comment out for all)
-start_index = 120000
+start_index = 100000
 # count = 30
 lines = lines[start_index:]
 
@@ -145,20 +145,20 @@ def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
 def skip_line_for_font(line: str, font: str) -> "bool":
     """Returns true if line containes chars not properly rendered by font."""
 
-    # # letters ቨ - ቯ
-    # if any(
-    #     [
-    #         f in font
-    #         for f in {"Fantuwua", "Jiret", "Tint", "WashRa SemiBold", "Wookianos"}
-    #     ]
-    # ) and re.search(r"[\u1268-\u126F]", line):
-    #     return True
+    # letters ቨ - ቯ
+    if any(
+        [
+            f in font
+            for f in {"Fantuwua", "Jiret", "Tint", "WashRa SemiBold", "Wookianos"}
+        ]
+    ) and re.search(r"[\u1268-\u126F]", line):
+        return True
 
-    # # letter ጷ
-    # if any([f in font for f in {"Fantuwua", "Tint", "Wookianos"}]) and re.search(
-    #     r"\u1337", line
-    # ):
-    #     return True
+    # letter ጷ
+    if any([f in font for f in {"Fantuwua", "Tint", "Wookianos"}]) and re.search(
+        r"\u1337", line
+    ):
+        return True
 
     # allowed non-eth chars
     if "Droid" in font and re.search(
