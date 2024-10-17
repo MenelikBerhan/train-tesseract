@@ -63,7 +63,7 @@ def filter_religious_amh(line_wrds: "list[str]"):
 
         # for arabic numbers
         elif all([c in range(0, 10) for c in w]):
-            wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 4
+            wrds_freq_rel_amh_dict[w_dict] = wrds_freq_rel_amh_dict.get(w_dict, 0) + 3
 
         # for ethiopic numbers
         # elif all([c in range(0x1369, 0x137D) for c in w]):
@@ -129,7 +129,7 @@ def filter_articles(line_wrds: "list[str]"):
 
         # for arabic numbers
         if re.search(r"[0-9]", w_dict):
-            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 5
+            wrds_freq_articles[w_dict] = wrds_freq_articles.get(w_dict, 0) + 4
 
         # freq for single chars
         elif len(w_dict) == 1:

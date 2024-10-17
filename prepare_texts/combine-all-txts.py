@@ -74,47 +74,36 @@ add_chrs_dict = {
     "ቩ": 100,
     "ሧ": 100,
     "ሗ": 100,
+    "፡": 50000,
+    "።": 10000,
+    "፣": 2000,
+    "፤": 3000,
+    "፥": 3000,
+    "፦": 2000,
 }
+
 for ch in add_chrs_dict:
     all_wrds.extend([ch] * add_chrs_dict[ch])
 
-# add Ethiopic no.s as single words
-# add ቊ before random 30 no.s
-to_add_indicies = random.Random().sample(range(30, 100), 30)
-for n in range(30, 100):
+# add Ethiopic no.s as single words and 'ቊ' before random 250 no.s
+to_add_nums = random.Random().sample(range(1, 100), 50)
+to_add_nums.extend(random.Random().sample(range(100, 400), 100))
+to_add_nums.extend(random.Random().sample(range(400, 1000), 100))
+for n in range(1, 10000):
     eth_num = convert_to_eth_num(n)
-    if n >= 40:
-        if n in to_add_indicies:
-            all_wrds.extend([eth_num, "ቊ" + eth_num])
-        else:
+    if 2500 >= n >= 40:
+        # lacking in source texts: '፵፶፷፸፹፺'
+        if int(str(n)[-2]) in range(4, 10):
+            all_wrds.extend([eth_num] * 2)
+        # for ambigious pairs: '፮፮','፰፷','፺ን'
+        if ("6" in str(n) and "7" in str(n)) or (str(n)[-2] in "689"):
             all_wrds.extend([eth_num] * 2)
     else:
-        if n in to_add_indicies:
-            eth_num = "ቊ" + eth_num
         all_wrds.extend([eth_num])
 
-# to add ቊ before some no.s
-# add ቊ before random 100 no.s
-to_add_indicies = random.Random().sample(range(100, 350), 75)
-to_add_indicies.extend(random.Random().sample(range(350, 1000), 25))
-for n in range(100, 1000):
-    eth_num = convert_to_eth_num(n)
-    if n % 100 >= 40:
-        if n in to_add_indicies:
-            all_wrds.extend([eth_num, "ቊ" + eth_num])
-        else:
-            all_wrds.extend([eth_num] * 2)
-    else:
-        if n in to_add_indicies:
-            eth_num = "ቊ" + eth_num
-        all_wrds.extend([eth_num])
-
-for n in range(1000, 10000):
-    eth_num = convert_to_eth_num(n)
-    if n % 100 >= 40:
-        all_wrds.extend([eth_num] * 2)
-    else:
-        all_wrds.extend([eth_num])
+    # for 'ቊ'
+    if n in to_add_nums:
+        all_wrds.extend(["ቊ" + eth_num])
 
 # to add 500 '፼'
 nums = random.Random().sample(range(10000, 1000000), 400)
@@ -133,7 +122,7 @@ for q, k in single_quotes_dict.items():
             all_wrds[i] = q[0] + w + q[1]
 
 # add start and end quotes to d/t random words
-strt_quotes_dict = {"“": 600, "[": 400, "'": 200}
+strt_quotes_dict = {"“": 1200, "[": 400, "'": 500}
 for q, k in strt_quotes_dict.items():
     to_add_indicies = random.Random().sample(range(0, len(all_wrds)), k)
     for i in to_add_indicies:
@@ -141,7 +130,18 @@ for q, k in strt_quotes_dict.items():
         if all([ord(c) in eth_unicode_range_letters for c in w]):
             all_wrds[i] = q + w
 
-end_quotes_dict = {"”": 600, "]": 400, "'": 200}
+# add end quotes and ethiopic puncs to d/t random words
+end_quotes_dict = {
+    "”": 1200,
+    "]": 400,
+    "'": 500,
+    "፡": 150000,
+    "።": 70000,
+    "፣": 20000,
+    "፤": 15000,
+    "፥": 15000,
+    "፦": 10000,
+}
 for q, k in end_quotes_dict.items():
     to_add_indicies = random.Random().sample(range(0, len(all_wrds)), k)
     for i in to_add_indicies:
