@@ -13,12 +13,12 @@ import subprocess
 OVERWRITE_FILES: "bool" = True
 training_text_file = "amh-layer.training_txt"
 
-output_directory = "./amh-layer-ground-truth"
+output_directory = "./amh-layer-ground-truth-3"
 
 output_dir_path = pathlib.Path(output_directory)
 
 # setup log directory
-log_dir = "./log"
+log_dir = "./log3"
 log_dir_path = pathlib.Path(log_dir)
 if not log_dir_path.is_dir():
     log_dir_path.mkdir()
@@ -87,7 +87,7 @@ fonts = [
 ]
 
 # no of lines to process from txt file (comment out for all)
-start_index = 0
+start_index = 100000
 count = 50000
 lines = lines[start_index : start_index + count]
 
@@ -112,27 +112,27 @@ def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
     if is_beginning:
         t = datetime.now().strftime("%b-%d-%H_%M_%S")
         for f in {"split_out", "skipped_err", "stripped_err", "split_err"}:
-            with open(f"./log/{f}", "a") as log_file:
+            with open(f"./log3/{f}", "a") as log_file:
                 log_file.write(f"\n------- {t} -------\n")
 
     # normal output
     if result.stderr:
-        with open("./log/split_out", "a") as splt_out:
+        with open("./log3/split_out", "a") as splt_out:
             splt_out.write(result.stderr)
 
     # skipped lines (mostly due to small image height or width)
     if f"{output_base}.tif" not in result.stderr:
-        with open("./log/skipped_err", "a") as err_file:
+        with open("./log3/skipped_err", "a") as err_file:
             err_file.write(f"File: {output_base}\nErr: {result.stderr}\n")
 
     # stripped words due to font error
     if "Stripped" in result.stderr:
-        with open("./log/stripped_err", "a") as err_file:
+        with open("./log3/stripped_err", "a") as err_file:
             err_file.write(f"File: {output_base}\nErr: {result.stderr}\n")
 
     # exceptions
     if result.returncode != 0:
-        with open("./log/split_err", "a") as err_file:
+        with open("./log3/split_err", "a") as err_file:
             err_file.writelines(
                 [
                     f"Line: {line_no},  Font: {font_name}\n",

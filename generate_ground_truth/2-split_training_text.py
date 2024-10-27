@@ -87,9 +87,9 @@ fonts = [
 ]
 
 # no of lines to process from txt file (comment out for all)
-start_index = 100000
-# count = 30
-lines = lines[start_index:]
+start_index = 50000
+count = 50000
+lines = lines[start_index : start_index + count]
 
 
 # map of each font to its font name, with space replaced with `_` and
