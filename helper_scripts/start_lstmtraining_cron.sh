@@ -16,23 +16,24 @@ else
 		echo "$(date) : Killed by OOM: $killed_info"
 
 		# copy last checkpoint as a backup
-                cp ~/train-tesseract/data/amh-layer/checkpoints/amh-layer_checkpoint \
-                        ~/train-tesseract/bak/amh-layer_checkpoint-"$(date | tr ' ' '_')"
+		cp ~/train-tesseract/data/amh-layer/checkpoints/amh-layer_checkpoint \
+			~/train-tesseract/bak/amh-layer_checkpoint-"$(date | tr ' ' '_')"
 
 		cd /home/menelikberhan/train-tesseract/tesstrain && \
 		source ../.venv/bin/activate && \
 		lstmtraining \
 			--debug_interval 0 \
-			--traineddata ../data/amh-layer/amh-layer.traineddata \
-			--model_output ../data/amh-layer/checkpoints/amh-layer \
-			--train_listfile ../data/amh-layer/list.train \
-			--eval_listfile ../data/amh-layer/list.eval \
+			--traineddata "../data/amh-layer/amh-layer.traineddata" \
+			--continue_from "../data/eng/eng.lstm" \
+			--model_output "../data/amh-layer/checkpoints/amh-layer" \
+			--train_listfile "../data/amh-layer/list.train" \
+			--eval_listfile "../data/amh-layer/list.eval" \
 			--learning_rate 0.001 \
-			--target_error_rate 0.0001 \
-			--net_spec '[1,36,0,1 Ct3,3,16 Mp3,3 Lfys48 Lfx96 Lrx96 Lfx192 O1c335]' \
-			--max_iterations -4 >> ../out_lstmtrain_chron_15 2>&1
+			--target_error_rate 0.001 \
+			--net_spec '[Lfx384 O1c335]' \
+			--append_index 5 \
+			--max_iterations -4 >> ../out_lstmtrain_chron_17 2>&1
 	fi
 fi
 
-# --net_spec [1,48,0,1 Ct3,3,16 Mp3,3 Lfys64 Lfx96 Lrx96 Lfx384 O1c335]
 
