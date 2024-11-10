@@ -77,18 +77,18 @@ fonts = [
     "Droid Sans Ethiopic",
     "Droid Sans Ethiopic Bold",
     # from washera fonts
-    "Ethiopia Jiret",
+    #"Ethiopia Jiret",
     # "Ethiopic WashRa Bold, Bold",  # very similar to Abyssinica SIL
-    "Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
-    "Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
+    #"Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
+    #"Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
     # "Ethiopic Fantuwua",  # confusing አ - ኦ
     # from legally-free-geez-fonts-v1_0_0
-    "A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
+    #"A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
 ]
 
 # no of lines to process from txt file (comment out for all)
 start_index = 0
-count = 50000
+count = 201000
 lines = lines[start_index : start_index + count]
 
 
@@ -104,7 +104,7 @@ font_name_dict = {
 }
 
 
-def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
+def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning, line):
     """Parses text2image logs and writes normal output, skipped lines,
     stripped words and Exception errors to log files."""
 
@@ -137,6 +137,22 @@ def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning):
                 [
                     f"Line: {line_no},  Font: {font_name}\n",
                     f"Stderr: {result.stderr}\n",
+                ]
+            )
+        exit(1)
+
+    # check if all words in line exist in image
+    no_of_chars = 0
+    with open(f"{output_base}.box") as box_file:
+        for l in box_file:
+            no_of_chars += 1
+
+    if len(line) != no_of_chars:
+        with open("./log/split_err", "a") as err_file:
+            err_file.writelines(
+                [
+                    f"Line: {line_no},  Font: {font_name}\n",
+                    f"Error: Line doesn't fit in given width\n",
                 ]
             )
         exit(1)
@@ -201,12 +217,13 @@ for line in lines:
                 f"--outputbase={output_base}",
                 "--max_pages=1",
                 "--strip_unrenderable_words",
-                "--leading=0",  # Inter-line space (in pixels) default:12
-                "--margin=10",
-                "--xsize=3000",  # change xsize & ysize based on line length
-                "--ysize=100",  # +  to minimize margin spaces around text
+                "--leading=32",  # Inter-line space (in pixels) default:12
+                #"--margin=10",
+                "--xsize=3600",  # change xsize & ysize based on line length
+                "--ysize=480",  # +  to minimize margin spaces around text
+                "--char_spacing=1.0",  # Inter-character space in ems def:0
+                "--exposure=0",
                 "--unicharset_file=unicharset_files/Ethiopic.unicharset",
-                "--char_spacing=0.3",  # Inter-character space in ems def:0
             ],
             encoding="utf8",  # to force str format for result attributes
             capture_output=True,  # to capture stdout & stderr
@@ -214,7 +231,7 @@ for line in lines:
 
         # parse subprocess result logs & write to log files
         is_begining = line_count == start_index + 1 and font == fonts[0]
-        parse_txt2img_log(line_count, font_name, output_base, result, is_begining)
+        parse_txt2img_log(line_count, font_name, output_base, result, is_begining, line)
 
     line_count += 1
 
