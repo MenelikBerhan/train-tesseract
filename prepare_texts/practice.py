@@ -5,48 +5,150 @@
 Testing Ground for cleaning txt files
 """
 import json
-from math import floor
 import os
-import re
 from glob import iglob
-from pprint import pprint
+
+non_eth_chars = {
+    # minus, en & em dashes (rep: minus-hiphen(-))
+    '−', '–', '—',
+    # dots (rep: . [for '…'])
+    '…', '•',
+    # to maintain spacing (removed when splitting line)
+    ' ', '\n', '\t',
+    # general uses (rep: as is)
+    '~', '|', '$', '*', '^', '#',  '%', '/', '\\', '!', '?',
+    '+', '=', '<', '>', '-', '_', '.', ',', ':', ';',
+    # arabic nums (rep: as is)
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    # quotes (rep: " and ')
+    '"', "'", '‘', '’', '“', '”', '«', '»', '‹', '›', '`',
+    # brackets (rep: as is)
+    '(', ')', '[', ']', '{', '}'
+}
+
+allowed_non_eth_chars = {
+    # minus, en & em dashes (rep: minus-hiphen(-))
+    # '−', '–', '—',
+    # dots (rep: . [for '…'])
+    # '…', '•',
+    # to maintain spacing (removed when splitting line)
+    ' ', '\n', '\t',
+    # general uses (rep: as is)
+    # '~', '|', '$', '*', '^', '#', 
+    '%', '/', '!', '?',
+    '+', '=', '<', '>', '-', '.', ',', ':', 
+    # ';',
+    # arabic nums (rep: as is)
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    # quotes (rep: " and ')
+    '"', "'", 
+    '«', '»',
+    # '‹', '›', '`', '‘', '’', '“', '”', 
+    # brackets (rep: as is)
+    '(', ')', 
+    # '[', ']', '{', '}'
+}
 
 
-out_path = './test-combine_txt.txt'
-c = 0
+# ethiopic characters unicode value ranges
+eth_unicode_range_all = range(0x1200, 0x137d)
+"range of unicode values (in hexadecimal) for all Ethiopic characters"
 
-root = './cleaned_texts/'
+wa_and_waa = {0x1217, 0x1248, 0x124B, 0x1288, 0x128B, 0x12B0, 0x12B3, 0x12C0,
+     0x12C3, 0x12F7, 0x1310, 0x1313, }
+eth_letters_avoid = {
+    0x1247, 0x124A, 0x124C, 0x124D, 0x1250, 0x1251, 0x1252, 0x1253,
+    0x1254, 0x1255, 0x1256, 0x1258, 0x125A, 0x125B, 0x125C, 0x125D,
+    0x1287, 0x128A, 0x128C, 0x128D, 0x12AF, 0x12B2, 0x12B4, 0x12B5,
+    0x12C2, 0x12C4, 0x12C5, 0x12CF, 0x12EF, 0x12F8, 0x12F9, 0x12FA,
+    0x12FB, 0x12FC, 0x12FD, 0x12FE, 0x12FF, 0x130F, 0x1312, 0x1314,
+    0x1315, 0x1318, 0x1319, 0x131A, 0x131B, 0x131C, 0x131D, 0x131E,
+    0x131F, 0x1347, 0x1358, 0x1359, 0x135A}
 
-if __name__ == '__main__':
-    pass
-    # pathname = os.path.join('./cleaned_texts/', '**', '*.txt')
-    # prob_files: 'dict[str, list[tuple[int, str]]]' = {}
-    # for file_path in iglob(pathname, recursive=True):
-    #     with open(file_path) as in_file:
-    #         l = 0
-    #         for line in in_file.readlines():
-    #             l += 1
-    #             if line.isspace() or line == '':
-    #                 continue
+# 3 comb marks & '፠', '፧', '፨'0x1366 (፦)
+eth_puncs_avoid = {0x135d, 0x135e, 0x135f, 0x1360, 0x1367, 0x1368}
+# output file to write info to
+info_ouput_file = './txt_info_all.txt'
 
-    #             if re.search(r'(1997|1998)', line) != None:
-    #                 if file_path in prob_files:
-    #                     if len(prob_files[file_path]) > 3000:
-    #                         print(f"Break too Much in file: {file_path}")
-    #                         break
-    #                     prob_files[file_path].append((l, line))
-    #                 else:
-    #                     prob_files[file_path] = [(l, line)]
+# root dir of  txts (contains dirs only)
+txts_root_dir = './cleaned_texts/'
 
-    # print(len(prob_files))
-    # k = list(prob_files.keys())
-    # k.sort(key=lambda x: len(prob_files[x]), reverse=True)
-    # with open(out_path, 'w') as file:
-    #     for f in k:
-    #         to_write = f'{f} ({len(prob_files[f])} Lines)\n'
-    #         for line_info in prob_files[f]:
-    #             to_write += f'{line_info[0]}: "{line_info[1].strip()}"'
-    #         file.write(to_write + '\n')
+# use list of dirs in root dir as groups of txts
+group_path = os.path.join(txts_root_dir, '*', '')
+group_dirs = list(iglob(group_path, recursive=False))
+
+# dict to store info about each group and its sub groups
+info_dict: 'dict[str, dict[str,  dict[str, dict[str, list[str]]]]]' = {}
+"""{'group_path': {sub_group_path: {file: {'char': list['words']}}}}"""
+
+
+for group_dir in group_dirs:
+
+    # to match sub dirs
+    sub_group_path = group_dir + '/*/'
+    sub_group_dirs = list(iglob(sub_group_path, recursive=False))
+
+    if len(sub_group_dirs) == 0:    # no sub groups
+        sub_group_dirs.append(group_dir)
+
+    group_dict: 'dict[str,  dict[str, dict[str, list[str]]]]' = {}
+    """{sub_group_path: {file: {'char': list['words']}}}"""
+    for sub_group_dir in sub_group_dirs:
+        sub_group_dict: 'dict[str, dict[str, list[str]]]' = {}
+        # all txt files in sub group dir
+        pathname = os.path.join(sub_group_dir, '**', '*.txt')
+
+        for file_path in iglob(pathname, recursive=True):
+            file_dict: 'dict[str, list[str]]' = {}
+            """{file: {'char': list['words']}}"""
+            with open(file_path) as in_file:
+                for line in in_file:
+                    if line.isspace() or line == '':
+                        continue
+                    words = line.split()
+                    for w in words:
+                        # if not any([ord(c) in eth_unicode_range_all for c in w]):
+                        #     continue
+                        for c in w:
+                            # if not (ord(c) in eth_unicode_range_all or c in non_eth_chars):
+                            #     continue
+                            if (c in allowed_non_eth_chars) or\
+                                (ord(c) in eth_unicode_range_all and not (ord(c) in eth_puncs_avoid or ord(c) in eth_letters_avoid)):
+                                continue
+                            if c not in file_dict:
+                                file_dict[c] = []
+                            file_dict[c].append(w)
+
+            if file_dict == {}:
+                continue
+            sub_group_dict[file_path] = file_dict
+
+        group_dict[sub_group_dir] = sub_group_dict
+
+    info_dict[group_dir] = group_dict
+
+# write to output file
+with open(info_ouput_file, 'w') as file:
+    json.dump(info_dict, file, indent=2, ensure_ascii=False)
+
+input_sub_groups = {    # sub dirs in root dir (no / at start)
+'word_lists', 'dictionary_and_linguistic_books', 'articles',
+'books/religious_amh/', 'books/religious_geez/', 'enh_corpus_by_year',
+}
+# with open('./txt_test_info.txt') as file:
+#     info = json.load(file)
+out = {}
+out['word_lists'] = info_dict["./cleaned_texts/word_lists/"]
+out['dictionaries'] = info_dict["./cleaned_texts/dictionary_and_linguistic_books/"]
+out['articles'] = info_dict["./cleaned_texts/articles/"]
+out['books/religious_amh/'] = info_dict["./cleaned_texts/books/"]["./cleaned_texts/books/religious_amh/"]
+out['books/religious_geez/'] = info_dict["./cleaned_texts/books/"]["./cleaned_texts/books/religious_geez/"]
+out['enh_corpus'] = info_dict["./cleaned_texts/enh_corpus_by_year/"]
+
+with open('./selected_info_all.txt', 'w') as file:
+    json.dump(out, file, indent=2, ensure_ascii=False)
+
+
 
 
 """ d1 = {0: '', 1: '፩', 2: '፪', 3: '፫', 4: '፬',
