@@ -18,7 +18,14 @@ elif [ ! -d "$2" ] ; then
 	exit 1
 fi
 
-STARTER_TRAINEDDATA="$2/amh-scratch.traineddata"
+STARTER_TRAINEDDATA="$2/amh-layer.traineddata"
+
+# set windows dir to copy results to
+if [ -z "$3" ] ; then
+        WIN_DIR="$d/a"
+else
+        WIN_DIR="$d/$3"
+fi
 
 if [ "$(echo $1 | grep '\.checkpoint$')" ] ; then
 	# for checkpoints check if starter traineddata exist in trial directory
@@ -54,6 +61,7 @@ else
 fi
 
 #echo "TEST $MODEL   $MODEL_PATH"
+echo "Running evals for $1"
 
 # run tesseract using model on sets of images
 tesseract --tessdata-dir "$MODEL_PATH" "tesseract_inputs/in_samples" "$MODEL"_result_samples -l "$MODEL"
@@ -70,10 +78,10 @@ RES_KIDANE="$MODEL"_result_kidane.txt
 RES_EVAL_6="$MODEL"_result_eval_6.txt
 
 # run lstmeval on lstmf files list of synthetic images from train trial 5
-lstmeval --model "$MODEL_PATH/$MODEL".traineddata --eval_listfile lstmeval_lists/list.eval_5 --verbosity 2 >& eval_synth_"$MODEL"_5.log
+#lstmeval --model "$MODEL_PATH/$MODEL".traineddata --eval_listfile lstmeval_lists/list.eval_5 --verbosity 2 >& eval_synth_"$MODEL"_5.log
 
 # run lstmeval on lstmf files list of synthetic images from train trial 6
-lstmeval --model "$MODEL_PATH/$MODEL".traineddata --eval_listfile lstmeval_lists/list.eval_6 --verbosity 2 >& eval_synth_"$MODEL"_6.log
+#lstmeval --model "$MODEL_PATH/$MODEL".traineddata --eval_listfile lstmeval_lists/list.eval_6 --verbosity 2 >& eval_synth_"$MODEL"_6.log
 
 # run ocrevalUation to compare ocr results with ground truth files
 java -cp ocr-evaluation-tools/ocrevalUAtion-1.3.4-jar-with-dependencies.jar eu.digitisation.Main \
@@ -104,7 +112,7 @@ cp "$RES_SAMPLES" "$RES_KIDANE" "$RES_EVAL_6" eval_synth_"$MODEL"_5.log eval_syn
 	acc_"$MODEL"_samples.txt acc_"$MODEL"_kidane.txt acc_"$MODEL"_eval_6.txt \
 	wrd_acc_"$MODEL"_samples.txt wrd_acc_"$MODEL"_kidane.txt wrd_acc_"$MODEL"_eval_6.txt \
 	sync_"$MODEL"_samples.txt sync_"$MODEL"_kidane.txt  sync_"$MODEL"_eval_6.txt \
-	"$d"/a
+	"$WIN_DIR"
 
 #if [ "$?" != 0 ] ; then
 #	exit 1

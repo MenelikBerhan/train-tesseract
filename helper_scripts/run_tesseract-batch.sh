@@ -9,7 +9,6 @@ elif [ ! -f "$1" ] ; then
 	exit 1
 fi
 
-#MODEL_PATH=$(egrep -o ".+/" $1)
 MODEL_PATH="$(echo $1 | egrep -o '.*/')"
 
 if [ -z "$MODEL_PATH" ] ; then

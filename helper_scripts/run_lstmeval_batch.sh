@@ -5,16 +5,21 @@
 
 TRIAL="$1"
 CHECKPOINTS_DIR="checkpoints"
-#STARTER_TRAINED_DATA="$TRIAL/amh-layer.traineddata"
-STARTER_TRAINED_DATA="$TRIAL/amh-scratch.traineddata"
+STARTER_TRAINED_DATA="$TRIAL/amh-layer.traineddata"
 #TRAINEDDATA_DIR="$TRIAL/checkpoint_traineddatas"
 TRAINEDDATA_DIR="."
-LSTMF_FILES_DIR="eval_files/lstmeval_files_6"
+LSTMF_FILES_DIR="eval_files/lstmeval_files_13"
 EVAL_CER_DIR="$TRIAL/cer_eval"
 FROM_CHECKPOINT="0"
 FROM_TRAINED_DATA="1"
 GENERATE_EVAL_TSV="1"
 
+# set windows dir to copy results to
+if [ -z "$2" ] ; then
+        WIN_DIR="$d/a"
+else
+        WIN_DIR="$d/$2"
+fi
 
 if [ -z "$1" ] ; then
 	echo "Error: No trial directory path given"
@@ -29,7 +34,7 @@ fi
 
 # create traineddata from checkpoints
 if [ "$FROM_CHECKPOINT" == "1" ] ; then
-	a_c=$(ls "$CHECKPOINTS_DIR"/*.checkpoint | sort -n )
+	a_c=$(ls "$CHECKPOINTS_DIR"/*.checkpoint | sort -nr )
 
 	for c in $a_c ; do \
 	lstmtraining --stop_training \
@@ -39,17 +44,19 @@ fi
 
 # run lstmeval on each traineddata
 if [ "$FROM_CHECKPOINT" == "1" -o  "$FROM_TRAINED_DATA" == "1" ] ; then
-
 	ls "$LSTMF_FILES_DIR"/*.lstmf > lstmeval_lists/list.eval
-	a_t="$(ls $TRAINEDDATA_DIR/*.traineddata | sort -n )"
+	a_t="$(ls $TRAINEDDATA_DIR/*.traineddata | sort -nr )"
 
 	for t in $a_t ; do \
+		echo -e "\n----------------------------------------"
 		echo "Running lstmeval for $t"
+		echo -e "----------------------------------------"
 
 		SUFF="$(basename -s .traineddata $t | cut -d '_' -f2-4)" &&  \
-		lstmeval --verbosity=0 --model "$t" \
+		time lstmeval --verbosity=0 --model "$t" \
 			--eval_listfile lstmeval_lists/list.eval 2>&1 | \
-			grep "^BCER eval" > "$EVAL_CER_DIR"/eval_"$SUFF".txt ; done
+			grep "^BCER eval" > "$EVAL_CER_DIR"/eval_"$SUFF".txt ; \
+	done
 fi
 
 # output lstmeval.tsv
@@ -62,7 +69,7 @@ if [ "$GENERATE_EVAL_TSV" == "1" ] ; then
 		eval=$(egrep -o "[0-9\.]{5,}," "$f")
 		echo "$eval" "$iter" | tr ',_' ' '| awk '{print $3"\t"$4"\t"$1"\t"$2}' >> lstmeval_"$TRIAL".tsv ; done
 
-	cp lstmeval_"$TRIAL".tsv "$d/a"
+	cp lstmeval_"$TRIAL".tsv "$WIN_DIR"
 	mv lstmeval_"$TRIAL".tsv "$TRIAL"/tsv
 
 fi

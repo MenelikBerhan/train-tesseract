@@ -17,6 +17,12 @@ elif [ ! -f tsv/iteration_"$TRIAL".tsv -o ! -f tsv/checkpoint_"$TRIAL".tsv -o ! 
 	exit 1
 fi
 
+# set windows dir to copy results to
+if [ -z "$2" ] ; then
+        WIN_DIR="$d/a"
+else
+        WIN_DIR="$d/$2"
+fi
 
 source .venv/bin/activate
 
@@ -36,7 +42,7 @@ if [ "$?" != 0 ] ; then
 	exit 1
 fi
 
-mv amh-layer_"$TRIAL".plot*.png "$d/a"
+mv amh-layer_"$TRIAL".plot*.png "$WIN_DIR"
 
 deactivate
 

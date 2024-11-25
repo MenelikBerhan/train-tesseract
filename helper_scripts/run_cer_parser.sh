@@ -5,7 +5,8 @@
 
 LOG="$1"
 TRIAL="$2"
-LSTMEVAL="$3"	# result of running lstmeval on checkpoint traineddatas
+LSTMEVAL="$4"	# result of running lstmeval on checkpoint traineddatas
+
 
 if [ ! -f "$1" ] ; then
 	echo "Error: Couldn't Find given Training Log file"
@@ -16,7 +17,7 @@ elif [ -z "$2" ] ; then
 	exit 1
 
 # check if lstmeval file exists at given or default path
-elif [ -z "$3" ] ; then
+elif [ -z "$4" ] ; then
 	LSTMEVAL="$TRIAL"/tsv/lstmeval_"$TRIAL".tsv
 	if [ ! -f "$LSTMEVAL" ] ; then
 		echo "Error: couldn't find lstmeval.tsv at Default Location $LSTMEVAL"
@@ -25,6 +26,13 @@ elif [ -z "$3" ] ; then
 elif [ ! -f "$LSTMEVAL" ] ; then
 	echo "Error: couldn't find given file $LSTMEVAL"
 	exit 1
+fi
+
+# set windows dir
+if [ -z "$3" ] ; then
+	WIN_DIR="$d/a"
+else
+	WIN_DIR="$d/$3"
 fi
 
 # BCER per 100 iterations
@@ -68,5 +76,5 @@ echo -e 'LearningIteration\tTrainingIteration\tEvalCER\tCheckpointCER' > eval_al
 sort -n eval_"$TRIAL".tsv "$LSTMEVAL" | egrep "^[0-9]+" >> eval_all_"$TRIAL".tsv
 
 # move to windows dir
-cp *_"$TRIAL".tsv "$d/a"
+cp *_"$TRIAL".tsv "$WIN_DIR"
 mv *_"$TRIAL".tsv "$TRIAL"/tsv
