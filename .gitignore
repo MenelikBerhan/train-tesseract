@@ -28,5 +28,9 @@ cron*.log
 
 **/char_freq*.log
 
-using-tesstrain
 fonts/.uuid
+
+**/using-tesstrain/*output*/
+**/using-tesstrain/*temp*/
+**/using-tesstrain/amh-layer.training_txt*
+
