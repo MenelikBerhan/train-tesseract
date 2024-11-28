@@ -1,3 +1,12 @@
 [submodule "tesstrain"]
 	path = tesstrain
 	url = https://github.com/tesseract-ocr/tesstrain.git
+[submodule "data/tessdata_best"]
+	path = data/tessdata_best
+	url = https://github.com/tesseract-ocr/tessdata_best.git
+	branch = main
+[submodule "data/langdata_lstm"]
+	path = data/langdata_lstm
+	url = https://github.com/tesseract-ocr/langdata_lstm.git
+	branch = main
+	ignore = dirty
