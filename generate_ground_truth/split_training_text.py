@@ -11,17 +11,37 @@ import subprocess
 
 
 OVERWRITE_FILES: "bool" = True
+
 training_text_file = "amh-layer.training_txt"
 
 output_directory = "./amh-layer-ground-truth"
 
-output_dir_path = pathlib.Path(output_directory)
-
-# setup log directory
 log_dir = "./log"
-log_dir_path = pathlib.Path(log_dir)
-if not log_dir_path.is_dir():
-    log_dir_path.mkdir()
+
+# start index and no of lines to process from txt file
+start_index = 0		# page no. minus one
+count = 5000		# set to -1 for all lines after start_index
+
+# list of fonts to use (must be found in --fonts_dir param of text2image)
+# to install fonts: copy to `/usr/share/fonts` and `fc-cache -fv`
+# to list all available fonts: `fc-list :[lang=am] family style | sort`
+fonts = [
+    # from okfonts of lstmdata/amh (except droid sans)
+    "Abyssinica SIL",
+    "FreeSerif",
+    "Noto Sans Ethiopic",
+    "Noto Sans Ethiopic Bold",
+    # "Droid Sans Ethiopic",
+    # "Droid Sans Ethiopic Bold",
+    # from washera fonts
+    #"Ethiopia Jiret",
+    # "Ethiopic WashRa Bold, Bold",  # very similar to Abyssinica SIL
+    #"Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
+    #"Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
+    # "Ethiopic Fantuwua",  # confusing አ - ኦ
+    # from legally-free-geez-fonts-v1_0_0
+    #"A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
+]
 
 
 def setup_output_dir(OVERWRITE: bool, output_dir_path: pathlib.Path):
@@ -54,42 +74,27 @@ def setup_output_dir(OVERWRITE: bool, output_dir_path: pathlib.Path):
                 print(f'Overwriting files in "{output_dir_path}"')
 
 
+# setup output and log directory
+output_dir_path = pathlib.Path(output_directory)
+log_dir_path = pathlib.Path(log_dir)
+if not log_dir_path.is_dir():
+    log_dir_path.mkdir()
+
 setup_output_dir(OVERWRITE_FILES, output_dir_path)
 
+# read lines from text file, set random seed and shuffle lines
 lines: "list[str]" = []
 with open(training_text_file, "r") as input_file:
     for line in input_file:
         lines.append(line.strip())
-
-# set random seed and shuffle lines
 rand = random.Random(23)
 rand.shuffle(lines)
 
-# list of fonts to use (must be found in --fonts_dir param of text2image)
-# to install fonts: copy to `/usr/share/fonts` and `fc-cache -fv`
-# to list all available fonts: `fc-list :[lang=am] family style | sort`
-fonts = [
-    # from okfonts of lstmdata/amh (except droid sans)
-    "Abyssinica SIL",
-    "FreeSerif",
-    "Noto Sans Ethiopic",
-    "Noto Sans Ethiopic Bold",
-    "Droid Sans Ethiopic",
-    "Droid Sans Ethiopic Bold",
-    # from washera fonts
-    #"Ethiopia Jiret",
-    # "Ethiopic WashRa Bold, Bold",  # very similar to Abyssinica SIL
-    #"Ethiopic WashRa SemiBold, Bold",  # v similar to WasheRa Bold, but compacter
-    #"Ethiopic Wookianos",  # skip 1268 ቨ - 126F ቯ
-    # "Ethiopic Fantuwua",  # confusing አ - ኦ
-    # from legally-free-geez-fonts-v1_0_0
-    #"A0 Addis Abeba Unicode",  # similar to Noto Sans but wider
-]
-
-# no of lines to process from txt file (comment out for all)
-start_index = 0
-count = 201000
-lines = lines[start_index : start_index + count]
+# use only 'count' no. of lines
+if count > 0:
+    lines = lines[start_index : start_index + count]
+else:
+    lines = lines[start_index : ]
 
 
 # map of each font to its font name, with space replaced with `_` and
@@ -103,6 +108,12 @@ font_name_dict = {
     for font in fonts
 }
 
+# log files for text2image
+split_out = log_dir_path.joinpath("split_out")		# normal output
+skipped_err = log_dir_path.joinpath("skipped_err")	# skipped lines
+stripped_err = log_dir_path.joinpath("stripped_err")	# stripped chars
+split_err = log_dir_path.joinpath("split_err")		# other errors
+
 
 def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning, line):
     """Parses text2image logs and writes normal output, skipped lines,
@@ -111,28 +122,28 @@ def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning, lin
     # truncate files and add time header if its beginning
     if is_beginning:
         t = datetime.now().strftime("%b-%d-%H_%M_%S")
-        for f in {"split_out", "skipped_err", "stripped_err", "split_err"}:
-            with open(f"./log/{f}", "a") as log_file:
+        for f in {split_out, skipped_err, stripped_err, split_err}:
+            with open(f, "a") as log_file:
                 log_file.write(f"\n------- {t} -------\n")
 
     # normal output
     if result.stderr:
-        with open("./log/split_out", "a") as splt_out:
+        with open(split_out, "a") as splt_out:
             splt_out.write(result.stderr)
 
     # skipped lines (mostly due to small image height or width)
     if f"{output_base}.tif" not in result.stderr:
-        with open("./log/skipped_err", "a") as err_file:
+        with open(skipped_err, "a") as err_file:
             err_file.write(f"File: {output_base}\nErr: {result.stderr}\n")
 
     # stripped words due to font error
     if "Stripped" in result.stderr:
-        with open("./log/stripped_err", "a") as err_file:
+        with open(stripped_err, "a") as err_file:
             err_file.write(f"File: {output_base}\nErr: {result.stderr}\n")
 
-    # exceptions
+    # exceptions raised by text2image
     if result.returncode != 0:
-        with open("./log/split_err", "a") as err_file:
+        with open(split_err, "a") as err_file:
             err_file.writelines(
                 [
                     f"Line: {line_no},  Font: {font_name}\n",
@@ -141,21 +152,23 @@ def parse_txt2img_log(line_no, font_name, output_base, result, is_beginning, lin
             )
         exit(1)
 
-    # check if all words in line exist in image
-    no_of_chars = 0
-    with open(f"{output_base}.box") as box_file:
-        for l in box_file:
-            no_of_chars += 1
+    # makes sure line length is atleast 60
+    if len(line) < 60:
+        with open(skipped_err, "a") as err_file:
+            err_file.write(f"File: {output_base}\nErr: Less than 60 chars: '{line}'\n\n")
 
-    if len(line) != no_of_chars:
-        with open("./log/split_err", "a") as err_file:
-            err_file.writelines(
-                [
-                    f"Line: {line_no},  Font: {font_name}\n",
-                    f"Error: Line doesn't fit in given width\n",
-                ]
-            )
-        exit(1)
+    # check if all words in line exist in box file or image
+    with open(f"{output_base}.box") as box_file:
+        if len(line) != len(box_file.readlines()):
+            with open(split_err, "a") as err_file:
+                err_file.writelines(
+                    [
+                        f"Line: {line_no},  Font: {font_name}\n",
+                        f"Error: Line doesn't fit in given width\n",
+                    ]
+                )
+            exit(1)
+
 
 
 def skip_line_for_font(line: str, font: str) -> "bool":
@@ -186,8 +199,12 @@ def skip_line_for_font(line: str, font: str) -> "bool":
 
 # shuffle fonts to randomize font order
 rand.shuffle(fonts)
-# start line count from 1 for convinience
+
+# start line count (page no.) from 1 for convinience
 line_count = start_index + 1
+
+# to add time stamp to log files
+is_begining = True
 
 # loop over lines and fonts
 for line in lines:
@@ -217,21 +234,22 @@ for line in lines:
                 f"--outputbase={output_base}",
                 "--max_pages=1",
                 "--strip_unrenderable_words",
-                "--leading=32",  # Inter-line space (in pixels) default:12
-                #"--margin=10",
-                "--xsize=3600",  # change xsize & ysize based on line length
-                "--ysize=480",  # +  to minimize margin spaces around text
-                "--char_spacing=1.0",  # Inter-character space in ems def:0
+                "--leading=0",  # Inter-line space (in pixels) default:12
+                "--margin=10",
+                "--xsize=2600",  # change xsize & ysize based on line length
+                "--ysize=100",  # +  to minimize margin spaces around text
+                "--char_spacing=0.0",  # Inter-character space in ems def:0
                 "--exposure=0",
-                "--unicharset_file=unicharset_files/Ethiopic.unicharset",
+                "--unicharset_file=unicharset_files/amh.unicharset-by-tesstrain",
             ],
             encoding="utf8",  # to force str format for result attributes
             capture_output=True,  # to capture stdout & stderr
         )
 
         # parse subprocess result logs & write to log files
-        is_begining = line_count == start_index + 1 and font == fonts[0]
         parse_txt2img_log(line_count, font_name, output_base, result, is_begining, line)
+
+        is_begining = False
 
     line_count += 1
 
