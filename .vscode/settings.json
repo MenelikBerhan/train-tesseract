@@ -1,0 +1,26 @@
+{
+    // "python.analysis.autoImportCompletions": true,
+    // "python.analysis.typeCheckingMode": "basic",
+    "explorer.autoReveal": false,
+    "files.exclude": {
+        "**/*ground-truth*/**": true,
+    },
+    "files.watcherExclude": {
+        "**/*ground-truth*/**": true,
+        "generate_ground_truth/**": true,
+        "archives/**": true,
+        "data/**": true,
+        "log_train/**": true,
+        ".venv/**": true,
+        "**/.git/lfs/**": true,
+        "tesstrain/**": true,
+        "prepare_texts/combined_txts/**": true,
+        "prepare_texts/cleaned_texts/**": true,
+        "prepare_texts/training_texts/**": true,
+            "**/bak*/**": true,
+        "**/*amh-layer.training_txt*": true,
+        "generate_ground_truth/log*": true,
+    },
+    "python.analysis.typeCheckingMode": "off"
+}
+
