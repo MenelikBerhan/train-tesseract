@@ -34,3 +34,6 @@ fonts/.uuid
 **/using-tesstrain/*temp*/
 **/using-tesstrain/amh-layer.training_txt*
 
+generate_ground_truth/using-tesstrain/text*
+generate_ground_truth/using-tesstrain/bak
+generate_ground_truth/using-tesstrain/*-run_tesstrain.sh
