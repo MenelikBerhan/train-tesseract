@@ -7,8 +7,8 @@ python -m tesstrain \
 	--tessdata_dir="../../data/tessdata_best" \
 	--save_box_tiff \
 	--linedata_only \
-	--training_text="./text-1" \
-	--fontlist="FreeSerif" \
-	--tmp_dir="./free-temp" \
-	--output_dir="./free-output" \
+	--training_text="./text-3" \
+	--fontlist="Noto Sans Ethiopic Bold" \
+	--tmp_dir="./notoB-temp-3" \
+	--output_dir="./notoB-output-3" \
 
