@@ -20,19 +20,17 @@ else
 			~/train-tesseract/bak/amh-layer_checkpoint-"$(date | tr ' ' '_' | tr ':' '-')"
 
 		cd /home/menelikberhan/train-tesseract/tesstrain && \
-		source ../.venv/bin/activate && \
 		lstmtraining \
 			--debug_interval 0 \
 			--traineddata "../data/amh-layer/amh-layer.traineddata" \
 			--continue_from "../data/amh/amh-layer.lstm" \
 			--model_output "../data/amh-layer/checkpoints/amh-layer" \
 			--train_listfile "../data/amh-layer/list.train" \
-			--eval_listfile "../data/amh-layer/list.eval" \
 			--learning_rate 0.001 \
 			--target_error_rate 0.001 \
 			--net_spec '[Lfx192 O1c335]' \
 			--append_index 5 \
-			--max_iterations -4 >> ../out_lstmtrain_chron_20 2>&1
+			--max_iterations 2500000 >> ../out_lstmtrain_chron_23 2>&1
 	fi
 fi
 
