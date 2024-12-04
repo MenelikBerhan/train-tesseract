@@ -1,6 +1,7 @@
 #!/bin/bash
 # Script to check if lstmtraining is running & if not start it.
-# To be used for a cron job using corntab -e
+# To be used for a cron job using corntab -e. Example: to check every 30 mins:
+#0,30 * * * * ~/train-tesseract/helper_scripts/start_lstmtraining_cron.sh >> ~/train-tesseract/cron.log 2>&1
 
 a="$(pgrep lstmtraining)"
 if [ "$?" == 0 ] ; then
@@ -14,6 +15,9 @@ else
 	# restart lstmtraining
 	if [ "$?" == 0 ] ; then
 		echo "$(date) : Killed by OOM: $killed_info"
+
+		# delete users crontab (avoid second start incase this fails)
+		crontab -r
 
 		# copy last checkpoint as a backup
 		cp ~/train-tesseract/data/amh-layer/checkpoints/amh-layer_checkpoint \
