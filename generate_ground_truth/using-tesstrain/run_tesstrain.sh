@@ -7,8 +7,8 @@ python -m tesstrain \
 	--tessdata_dir="../../data/tessdata_best" \
 	--save_box_tiff \
 	--linedata_only \
-	--training_text="./text-3" \
-	--fontlist="Noto Sans Ethiopic Bold" \
-	--tmp_dir="./notoB-temp-3" \
-	--output_dir="./notoB-output-3" \
+	--fontlist="Droid Sans Ethiopic" \
+	--training_text="./text-droid-1" \
+	--tmp_dir="./droid-reg-temp-1" \
+	--output_dir="./droid-reg-output-1" \
 
