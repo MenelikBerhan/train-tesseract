@@ -37,3 +37,5 @@ fonts/.uuid
 generate_ground_truth/using-tesstrain/text*
 generate_ground_truth/using-tesstrain/bak
 generate_ground_truth/using-tesstrain/*-run_tesstrain.sh
+
+helper_scripts/[1-5]-[a-z]*start_tesstrain.sh

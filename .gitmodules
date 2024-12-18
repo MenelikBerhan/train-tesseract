@@ -5,6 +5,7 @@
 	path = data/tessdata_best
 	url = https://github.com/tesseract-ocr/tessdata_best.git
 	branch = main
+	ignore = dirty
 [submodule "data/langdata_lstm"]
 	path = data/langdata_lstm
 	url = https://github.com/tesseract-ocr/langdata_lstm.git
